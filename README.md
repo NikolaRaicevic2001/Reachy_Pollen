@@ -1,6 +1,8 @@
 # Reachy_Pollen
 Reachy_Pollen is a Python-based control and experimentation framework for the Reachy robot, built on top of the official SDK. It provides modular tools for robot manipulation, teleoperation integration, and rapid prototyping of control algorithms, enabling streamlined development of perception, planning, and interaction pipelines.
 
+Documentation: https://pollen-robotics.github.io/reachy2-sdk/reachy2_sdk/reachy_sdk.html
+
 # Setup
 ## Docker
 Image Dowload: https://hub.docker.com/r/pollenrobotics/reachy2
@@ -28,8 +30,8 @@ docker run --rm --platform linux/amd64 -p 8888:8888 -p 6080:6080 -p 50051:50051 
 ## Virtual Envrionment
 Setup virtual environment
 ```
-python3.10 -m venv reachy2_env
-source reachy2_env/bin/activate
+python3.10 -m venv reachy2
+source reachy2/bin/activate
 ```
 Install requirments
 ```
@@ -74,7 +76,7 @@ Rviz: http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0
         ```
     
 4) If experiencing issues with VR headset not properly moving the arms and not reflecting that in the teleoperation app then:
-    - Set the VR environmental variable: 
+    - Set the VR flag environmental variable: 
         ```
         $env:UNITY_XR_ENABLE=1
         ```
