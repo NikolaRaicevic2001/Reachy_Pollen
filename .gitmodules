@@ -1,3 +1,6 @@
 [submodule "examples_sdk"]
 	path = tutorial/examples_sdk
 	url = https://github.com/pollen-robotics/reachy2-sdk.git
+[submodule "tutorial/reachy2-tutorials"]
+	path = tutorial/reachy2-tutorials
+	url = https://github.com/pollen-robotics/reachy2-tutorials.git
