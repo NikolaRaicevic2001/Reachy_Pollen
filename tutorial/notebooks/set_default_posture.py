@@ -12,7 +12,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     # connect to Reachy
-    reachy = ReachySDK(host="localhost")
+    reachy = ReachySDK(host="192.168.10.172")
 
     # check if connection is successful
     if not reachy.is_connected:

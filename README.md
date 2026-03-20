@@ -41,7 +41,7 @@ pip install -r requirements.txt
 ## Visualization
 Rviz: http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0
 
-# Teleoperation Section
+# Teleoperation
 1) Dowload the VR headset app: https://www.meta.com/quest/setup/?srsltid=AfmBOorKOuGUIU7NR95vBQ4dcVi464ir4qGZndC4WYzo4wcg1Jpg4bKb
     - Connect the VR headset to the local machine 
     - Make sure that you can display the computer screen in the VR headset world

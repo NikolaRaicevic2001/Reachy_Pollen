@@ -106,7 +106,7 @@ if __name__ == "__main__":
     print("Reachy SDK example: draw square")
 
     logging.basicConfig(level=logging.INFO)
-    reachy = ReachySDK(host="localhost")
+    reachy = ReachySDK(host="192.168.10.172")
 
     if not reachy.is_connected:
         exit("Reachy is not connected.")

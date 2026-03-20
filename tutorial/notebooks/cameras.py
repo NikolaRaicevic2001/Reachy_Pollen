@@ -1,9 +1,8 @@
 """Example script to display live frames from the teleoperation and depth cameras."""
 
-import argparse
-import logging
-
 import cv2
+import logging
+import argparse
 import numpy as np
 
 from reachy2_sdk import ReachySDK
@@ -74,14 +73,10 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     argParser = argparse.ArgumentParser(description="SDK camera example")
-    argParser.add_argument(
-        "mode",
-        type=str,
-        choices=["teleop", "depth"],
-    )
+    argParser.add_argument("mode",type=str,choices=["teleop", "depth"])
     args = argParser.parse_args()
 
-    reachy = ReachySDK(host="localhost")
+    reachy = ReachySDK(host="192.168.10.172")
 
     if not reachy.is_connected:
         exit("Reachy is not connected.")
