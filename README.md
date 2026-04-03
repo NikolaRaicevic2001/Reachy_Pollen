@@ -29,10 +29,17 @@ docker run --rm --platform linux/amd64 -p 8888:8888 -p 6080:6080 -p 50051:50051 
 
 ## Virtual Envrionment
 Setup virtual environment
+- Linux
 ```
 python3.10 -m venv reachy2
 source reachy2/bin/activate
 ```
+- Windows
+```
+py -3.10 -m venv reachy2
+.\reachy2\Scripts\Activate
+```
+
 Install requirments
 ```
 pip install -r requirements.txt
@@ -42,6 +49,7 @@ pip install -r requirements.txt
 Rviz: http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0
 
 # Teleoperation
+## Setup
 1) Dowload the VR headset app: https://www.meta.com/quest/setup/?srsltid=AfmBOorKOuGUIU7NR95vBQ4dcVi464ir4qGZndC4WYzo4wcg1Jpg4bKb
     - Connect the VR headset to the local machine 
     - Make sure that you can display the computer screen in the VR headset world
@@ -80,3 +88,50 @@ Rviz: http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0
         ```
         $env:UNITY_XR_ENABLE=1
         ```
+## Dataset Recording
+```
+lerobot-record --robot.type=reachy2 --robot.ip_address=192.168.10.172 --robot.id=r2-0008 --robot.use_external_commands=true --teleop.type=keyboard --robot.with_mobile_base=false --robot.with_torso_camera=false --dataset.repo_id=pollen_robotics/record_test --dataset.single_task="Reachy 2 recording test" --dataset.num_episodes=1 --dataset.episode_time_s=5 --dataset.fps=15 --dataset.push_to_hub=false --dataset.private=true --dataset.streaming_encoding=true --dataset.encoder_threads=2 --display_data=true
+```
+
+```
+lerobot-record `
+--robot.type=reachy2 `
+--robot.ip_address=192.168.10.172 `
+--robot.id=r2-0008 `
+--robot.use_external_commands=false `
+--robot.with_mobile_base=true `
+--robot.with_l_arm=true `
+--robot.with_r_arm=true `
+--robot.with_neck=true `
+--robot.with_antennas=true `
+--robot.with_left_teleop_camera=false `
+--robot.with_right_teleop_camera=false `
+--robot.with_torso_camera=false `
+--robot.camera_width=640 `
+--robot.camera_height=480 `
+--robot.disable_torque_on_disconnect=false `
+--robot.max_relative_target=5.0 `
+--teleop.type=reachy2_teleoperator `
+--teleop.ip_address=192.168.10.194 `
+--teleop.use_present_position=false `
+--teleop.with_mobile_base=true `
+--teleop.with_l_arm=true `
+--teleop.with_r_arm=true `
+--teleop.with_neck=true `
+--teleop.with_antennas=true `
+--dataset.repo_id=pollen_robotics/record_test `
+--dataset.single_task="Reachy 2 recording test" `
+--dataset.num_episodes=1 `
+--dataset.episode_time_s=5 `
+--dataset.fps=15 `
+--dataset.push_to_hub=false `
+--dataset.private=true `
+--dataset.streaming_encoding=true `
+--dataset.encoder_threads=2 `
+--display_data=true
+```
+
+- Remove or rename dataset after every recording:
+```
+Remove-Item -Recurse -Force C:\Users\nikra\.cache\huggingface\lerobot\pollen_robotics\record_test
+```
