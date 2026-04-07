@@ -132,6 +132,7 @@ lerobot-record `
 --display_data=false
 ```
 
+- Higher Frequency Setup
 ```
 lerobot-record `
 --robot.type=reachy2 `
@@ -151,20 +152,30 @@ lerobot-record `
 --teleop.with_r_arm=true `
 --teleop.with_neck=true `
 --teleop.with_antennas=false `
---dataset.repo_id=pollen_robotics/record_test `
---dataset.single_task="Reachy 2 full test" `
+--dataset.repo_id=erl-hub/reachy-pick-and-place `
+--dataset.single_task="Reachy 2 pick and place test" `
 --dataset.num_episodes=1 `
---dataset.episode_time_s=30 `
+--dataset.episode_time_s=45 `
 --dataset.fps=15 `
 --dataset.vcodec=h264_nvenc `
 --dataset.streaming_encoding=false `
---dataset.push_to_hub=false `
---display_data=false
+--dataset.push_to_hub=true `
+--display_data=false 
+--resume=true
 ```
 
 - Remove or rename dataset after every recording:
 ```
-Remove-Item -Recurse -Force C:\Users\nikra\.cache\huggingface\lerobot\pollen_robotics\record_test
+Remove-Item -Recurse -Force "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place"
+```
+
+### Upload the datasets
+```
+# Navigate to the data
+cd "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place"
+
+# Use the dedicated CLI uploader (often bypasses API timeouts)
+huggingface-cli upload erl-hub/reachy-pick-and-place . . --repo-type=dataset
 ```
 
 ### Profiling
@@ -177,12 +188,29 @@ py-spy record -o lerobot_profile.svg --pid 24016
 ```
 
 ### Replaying
+- Locally
 ```
 lerobot-replay `
     --robot.type=reachy2 `
     --robot.ip_address=192.168.137.162 `
     --robot.use_external_commands=false `
     --robot.with_mobile_base=false `
-    --dataset.repo_id=pollen_robotics/record_test `
+    --dataset.repo_id=erl-hub/reachy-pick-and-place/ `
     --dataset.episode=0 
+```
+
+- Hub
+```
+lerobot-replay `
+--robot.type=reachy2 `
+--robot.ip_address=192.168.137.162 `
+--robot.id=r2-0008 `
+--robot.use_external_commands=false `
+--robot.with_mobile_base=false `
+--robot.with_l_arm=true `
+--robot.with_r_arm=true `
+--robot.with_neck=true `
+--robot.with_antennas=false `
+--dataset.repo_id="erl-hub/reachy-pick-and-place" `
+--dataset.episode=0
 ```
