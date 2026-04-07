@@ -89,6 +89,7 @@ Rviz: http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0
         $env:UNITY_XR_ENABLE=1
         ```
 ## Dataset Recording
+### Recording
 ```
 lerobot-record --robot.type=reachy2 --robot.ip_address=192.168.10.172 --robot.id=r2-0008 --robot.use_external_commands=true --teleop.type=keyboard --robot.with_mobile_base=false --robot.with_torso_camera=false --dataset.repo_id=pollen_robotics/record_test --dataset.single_task="Reachy 2 recording test" --dataset.num_episodes=1 --dataset.episode_time_s=5 --dataset.fps=15 --dataset.push_to_hub=false --dataset.private=true --dataset.streaming_encoding=true --dataset.encoder_threads=2 --display_data=true
 ```
@@ -96,9 +97,9 @@ lerobot-record --robot.type=reachy2 --robot.ip_address=192.168.10.172 --robot.id
 ```
 lerobot-record `
 --robot.type=reachy2 `
---robot.ip_address=192.168.10.172 `
+--robot.ip_address=192.168.137.162 `
 --robot.id=r2-0008 `
---robot.use_external_commands=false `
+--robot.use_external_commands=true `
 --robot.with_mobile_base=true `
 --robot.with_l_arm=true `
 --robot.with_r_arm=true `
@@ -112,8 +113,8 @@ lerobot-record `
 --robot.disable_torque_on_disconnect=false `
 --robot.max_relative_target=5.0 `
 --teleop.type=reachy2_teleoperator `
---teleop.ip_address=192.168.10.194 `
---teleop.use_present_position=false `
+--teleop.ip_address=192.168.137.162 `
+--teleop.use_present_position=true `
 --teleop.with_mobile_base=true `
 --teleop.with_l_arm=true `
 --teleop.with_r_arm=true `
@@ -122,16 +123,66 @@ lerobot-record `
 --dataset.repo_id=pollen_robotics/record_test `
 --dataset.single_task="Reachy 2 recording test" `
 --dataset.num_episodes=1 `
---dataset.episode_time_s=5 `
---dataset.fps=15 `
+--dataset.episode_time_s=10 `
+--dataset.fps=30 `
 --dataset.push_to_hub=false `
 --dataset.private=true `
---dataset.streaming_encoding=true `
---dataset.encoder_threads=2 `
---display_data=true
+--dataset.streaming_encoding=false `
+--dataset.encoder_threads=8 `
+--display_data=false
+```
+
+```
+lerobot-record `
+--robot.type=reachy2 `
+--robot.ip_address=192.168.137.162 `
+--robot.id=r2-0008 `
+--robot.use_external_commands=true `
+--robot.with_mobile_base=false `
+--robot.with_l_arm=true `
+--robot.with_r_arm=true `
+--robot.with_neck=true `
+--robot.with_antennas=false `
+--teleop.type=reachy2_teleoperator `
+--teleop.ip_address=192.168.137.162 `
+--teleop.use_present_position=true `
+--teleop.with_mobile_base=false `
+--teleop.with_l_arm=true `
+--teleop.with_r_arm=true `
+--teleop.with_neck=true `
+--teleop.with_antennas=false `
+--dataset.repo_id=pollen_robotics/record_test `
+--dataset.single_task="Reachy 2 full test" `
+--dataset.num_episodes=1 `
+--dataset.episode_time_s=30 `
+--dataset.fps=15 `
+--dataset.vcodec=h264_nvenc `
+--dataset.streaming_encoding=false `
+--dataset.push_to_hub=false `
+--display_data=false
 ```
 
 - Remove or rename dataset after every recording:
 ```
 Remove-Item -Recurse -Force C:\Users\nikra\.cache\huggingface\lerobot\pollen_robotics\record_test
+```
+
+### Profiling
+```
+Get-Process | Where-Object {$_.ProcessName -like "*python*"}
+```
+
+```
+py-spy record -o lerobot_profile.svg --pid 24016
+```
+
+### Replaying
+```
+lerobot-replay `
+    --robot.type=reachy2 `
+    --robot.ip_address=192.168.137.162 `
+    --robot.use_external_commands=false `
+    --robot.with_mobile_base=false `
+    --dataset.repo_id=pollen_robotics/record_test `
+    --dataset.episode=0 
 ```
