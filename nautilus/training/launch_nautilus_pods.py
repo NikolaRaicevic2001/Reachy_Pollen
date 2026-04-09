@@ -14,6 +14,7 @@ import tempfile
 import threading
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Annotated, Any, Dict, List, Optional
 
 import tyro
@@ -22,6 +23,7 @@ import yaml
 LEROBOT_ALGOS = frozenset({"act", "pi05", "groot"})
 # Kubernetes label for queue grouping (must match queue_watcher.py).
 LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"
+_TRAINING_DIR = Path(__file__).resolve().parent
 
 
 @dataclass
@@ -127,7 +129,7 @@ class NautilusPodConfig:
             name="models_root",
             help="Base directory for saved model outputs when --save_models is enabled.",
         ),
-    ] = "/pers_vol/dwait/models/lerobot"
+    ] = "/pers_vol/dwait/saved_models/lerobot"
 
 
 @dataclass
@@ -169,7 +171,7 @@ def build_lerobot_script(
     state_only_act: bool = False,
     train_extra: Optional[str] = None,
     save_models: bool = False,
-    models_root: str = "/pers_vol/dwait/models/lerobot",
+    models_root: str = "/pers_vol/dwait/saved_models/lerobot",
 ) -> str:
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
@@ -433,9 +435,10 @@ def monitor_and_unsuspend(
                 print("[Queue] All jobs finished.")
                 break
             if stop_event.is_set():
+                _qw = _TRAINING_DIR / "queue_watcher.py"
                 print(
                     f"\n[Queue] Interrupted. {len(statuses.suspended_names)} jobs suspended. "
-                    f"Re-attach: python nautilus_configs/queue_watcher.py "
+                    f"Re-attach: python {_qw} "
                     f"--label {queue_group_id} -nl {namespace_pod_limit}"
                 )
                 break
@@ -470,7 +473,7 @@ def main() -> None:
     use_job = cfg.jobs and algo != "DUMMY"
     nautilus_type = "job" if use_job else "pod"
     if cfg.yaml_file is None:
-        yaml_path = f"nautilus_configs/db-lerobot-{nautilus_type}.yaml"
+        yaml_path = str(_TRAINING_DIR / f"db-lerobot-{nautilus_type}.yaml")
     else:
         yaml_path = cfg.yaml_file
 

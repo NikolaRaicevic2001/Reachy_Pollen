@@ -6,18 +6,18 @@ Use this when:
   - You want to check the status of a running queue
   - You launched from commands.sh and want to monitor across invocations
 
-Examples:
+Examples (from repository root):
   # Re-attach to a specific queue group and resume unsuspending
-  python nautilus_configs/queue_watcher.py --label 20260304-143022 -nl 200
+  python nautilus/training/queue_watcher.py --label 20260304-143022 -nl 200
 
   # Monitor jobs by name prefix
-  python nautilus_configs/queue_watcher.py --prefix lerobot- -nl 200
+  python nautilus/training/queue_watcher.py --prefix lerobot- -nl 200
 
   # Just print current status, don't monitor
-  python nautilus_configs/queue_watcher.py --label 20260304-143022 --status
+  python nautilus/training/queue_watcher.py --label 20260304-143022 --status
 
   # List all queue groups currently in the namespace
-  python nautilus_configs/queue_watcher.py --list-groups
+  python nautilus/training/queue_watcher.py --list-groups
 """
 
 # Must match launch_nautilus_pods.LEROBOT_QUEUE_GROUP_LABEL_KEY
