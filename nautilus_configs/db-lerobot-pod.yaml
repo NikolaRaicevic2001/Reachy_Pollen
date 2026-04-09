@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: lerobot-training-pod-template
+spec:
+  containers:
+  - name: gpu-container
+    image: dhbhatt/rainbow-demorl:latest
+    command: ["/bin/bash", "-c"]
+    args: [
+        "git pull && \
+        python rainbow_demorl/train.py \
+            > /pers_vol/dwait/logs/$(date +%Y-%m-%d_%H-%M-%S)-lerobot.log"
+    ]
+    env:
+    - name: WANDB_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: wandb-secret
+          key: api-key
+    - name: GIT_ACCESS_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: github-token-dwait
+          key: GIT_ACCESS_TOKEN
+    volumeMounts:
+    - mountPath: /pers_vol
+      name: db-cephfs-volume
+    # PyTorch DataLoader workers need enough POSIX shm; default /dev/shm is ~64Mi in K8s.
+    - mountPath: /dev/shm
+      name: dshm
+    resources:
+      limits:
+        nvidia.com/gpu: "1"
+        memory: "11G"
+        cpu: "1.8"
+      requests:
+        nvidia.com/gpu: "1"
+        memory: "9.2G"
+        cpu: "1.5"
+  restartPolicy: Never
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      # Empirically determined nodes with good network to download large docker images
+      - weight: 100
+        preference:
+          matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - "ry-gpu-01.sdsc.optiputer.net"
+            - "ry-gpu-02.sdsc.optiputer.net"
+            - "ry-gpu-03.sdsc.optiputer.net"
+            - "ry-gpu-04.sdsc.optiputer.net"
+            - "ry-gpu-05.sdsc.optiputer.net"
+            - "ry-gpu-06.sdsc.optiputer.net"
+            - "ry-gpu-07.sdsc.optiputer.net"
+            - "ry-gpu-08.sdsc.optiputer.net"
+            - "ry-gpu-09.sdsc.optiputer.net"
+            - "ry-gpu-10.sdsc.optiputer.net"
+            - "ry-gpu-11.sdsc.optiputer.net"
+            - "ry-gpu-12.sdsc.optiputer.net"
+            - "ry-gpu-13.sdsc.optiputer.net"
+            - "ry-gpu-14.sdsc.optiputer.net"
+            - "ry-gpu-15.sdsc.optiputer.net"
+            - "ry-gpu-16.sdsc.optiputer.net"
+            - "k8s-3090-01.calit2.optiputer.net"
+            - "k8s-4090-01.calit2.optiputer.net"
+            - "k8s-4090-02.calit2.optiputer.net"
+      - weight: 50
+        preference:
+          matchExpressions:
+          - key: kubernetes.io/hostname
+            operator: In
+            values:
+            - "k8s-haosu-02.sdsc.optiputer.net"
+            - "k8s-haosu-03.sdsc.optiputer.net"
+            - "k8s-haosu-04.sdsc.optiputer.net"
+            - "k8s-haosu-05.sdsc.optiputer.net"
+            - "k8s-haosu-06.sdsc.optiputer.net"
+            - "k8s-haosu-07.sdsc.optiputer.net"
+            - "k8s-haosu-08.sdsc.optiputer.net"
+            - "k8s-haosu-09.sdsc.optiputer.net"
+            - "k8s-haosu-10.sdsc.optiputer.net"
+            - "k8s-haosu-11.sdsc.optiputer.net"
+            - "k8s-haosu-12.sdsc.optiputer.net"
+            - "k8s-haosu-13.sdsc.optiputer.net"
+            - "k8s-haosu-14.sdsc.optiputer.net"
+            - "k8s-haosu-15.sdsc.optiputer.net"
+            - "k8s-haosu-16.sdsc.optiputer.net"
+            - "k8s-haosu-17.sdsc.optiputer.net"
+            - "k8s-haosu-18.sdsc.optiputer.net"
+            - "k8s-haosu-19.sdsc.optiputer.net"
+            - "k8s-haosu-20.sdsc.optiputer.net"
+            - "k8s-haosu-21.sdsc.optiputer.net"
+            - "k8s-haosu-22.sdsc.optiputer.net"
+            - "k8s-haosu-23.sdsc.optiputer.net"
+      - weight: 80
+        preference:
+          matchExpressions:
+          - key: nvidia.com/gpu.product
+            operator: In
+            values:
+            - "NVIDIA-A100-80GB-PCIe"
+            - "NVIDIA-A100-SXM4-80GB"
+            - "NVIDIA-A100-80GB-PCIe-MIG-1g.10gb"
+            - "NVIDIA-A100-PCIE-40GB"
+            - "NVIDIA-RTX-A6000"
+            - "NVIDIA-RTX-A5000"
+            - "NVIDIA-GeForce-RTX-4090"
+            - "NVIDIA-GeForce-RTX-4080"
+            - "NVIDIA-GeForce-RTX-3090-Ti"
+            - "NVIDIA-GeForce-RTX-3090"
+            - "NVIDIA-GeForce-RTX-3080-Ti"
+            - "NVIDIA-GeForce-RTX-3080"
+      - weight: 60
+        preference:
+          matchExpressions:
+          - key: nvidia.com/gpu.product
+            operator: In
+            values:
+            - "NVIDIA-A40"
+            - "Tesla-V100-SXM2-32GB"
+            - "Tesla-V100-PCIE-16GB"
+      - weight: 50
+        preference:
+          matchExpressions:
+          - key: nvidia.com/gpu.product
+            operator: In
+            values:
+            - "NVIDIA-TITAN-RTX"
+            - "NVIDIA-GeForce-RTX-2080-Ti"
+            - "NVIDIA-TITAN-Xp"
+            - "NVIDIA-L40"
+            - "NVIDIA-A10"
+  volumes:
+    - name: db-cephfs-volume
+      persistentVolumeClaim:
+        claimName: db-cephfs-volume
+    - name: dshm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 4Gi

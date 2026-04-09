@@ -218,3 +218,81 @@ lerobot-replay `
 --dataset.repo_id="erl-hub/reachy-pick-and-place" `
 --dataset.episode=4
 ```
+
+## Training policies:
+
+### Training locally
+#### Ensure that ffmpeg is installed as follows for training models locally 
+```
+sudo apt update && sudo apt upgrade -y
+sudo add-apt-repository ppa:ubuntuhandbook1/ffmpeg7
+sudo apt update
+sudo apt install ffmpeg -y
+```
+
+#### Convert dataset to required format
+```
+python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id=pollen-robotics/pick_and_place_bottle && \
+```
+
+#### Start training
+```
+lerobot-train --dataset.repo_id=pollen-robotics/pick_and_place_bottle --policy.type=act --job_name=reachy2_lerobot_act --wandb.enable=false --policy.device=cuda --policy.push_to_hub=false"
+```
+
+### Training on Nautilus cluster
+
+[`nautilus_configs/launch_nautilus_pods.py`](nautilus_configs/launch_nautilus_pods.py) submits LeRobot training to Kubernetes on [Nautilus](https://nautilus.optiputer.net/) using the Pod or Job templates under `nautilus_configs/`. From the repo root, with `kubectl` configured for your namespace, run the launcher; it applies `kubectl apply` to generated manifests.
+
+Each training container: creates a Conda env, installs FFmpeg and the right `lerobot[...]` extras, converts the dataset from v2.1 to v3.0 when needed, then runs `lerobot-train` on CUDA with Weights & Biases enabled and `policy.push_to_hub=false` (override or extend with `--train_extra`).
+
+**Weights & Biases:** The Pod and Job templates inject `WANDB_API_KEY` from a Kubernetes secret named `wandb-secret` (key `api-key`). Create it once in your namespace so runs can log to your W&B workspace—for example:
+
+```
+kubectl create secret generic wandb-secret --from-literal=api-key=<YOUR_WANDB_API_KEY>
+```
+
+Without that secret, runs will not show up under your W&B account, or training may fail if not key is found.
+
+**Supported policy:** use **`act`** for real training runs. The launcher also accepts `pi05` and `groot`, but those paths are **not fully functional yet and are not supported** in this workflow—expect breakage if you try them until they are finished and documented.
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--dataset` | `-d` | Hugging Face dataset repo id (required unless `--algo DUMMY`). |
+| `--algo` | `-a` | **`act`** — supported. **`pi05`**, **`groot`** — experimental in the launcher only; not supported yet. **`DUMMY`** — long-running sleep pod for cluster tests; ignores `--jobs`. |
+| `--repeat` | `-nr` | Number of runs, each with a random seed (default `1`). |
+| `--jobs` | `-j` | Use a Kubernetes **Job** instead of a **Pod** (template `db-lerobot-job.yaml`). |
+| `--yaml_file` | `-y` | Custom path to Pod or Job YAML template (defaults: `nautilus_configs/db-lerobot-pod.yaml` or `db-lerobot-job.yaml`). |
+| `--namespace_pod_limit` | `-nl` | **Jobs only:** max active pods counted in the namespace; extra jobs are created **suspended** and unsuspended when capacity appears (`0` = no queuing). |
+| `--max_concurrent` | `-mc` | **Jobs with queuing:** cap how many of *our* jobs run at once (`0` = only the namespace limit applies). |
+| `--dry_run` | | Print the generated container script and exit (no `kubectl`). |
+| `--state_only_act` | | For ACT on proprio-only data, adds `--rename_map='{"observation.state":"observation.environment_state"}'` to training. |
+| `--train_extra` | | Single string of extra arguments appended to `lerobot-train` (quote carefully in your shell). |
+
+**Queuing:** If you use `--jobs` and set `--namespace_pod_limit` to a positive value, the launcher labels jobs with a queue group, starts as many as fit, and keeps unsuspending the rest as pods finish. If you interrupt that process (e.g. Ctrl+C), re-attach with [`nautilus_configs/queue_watcher.py`](nautilus_configs/queue_watcher.py) using the printed `--label` and the same `-nl` (and concurrency) you used at launch.
+
+#### Examples
+
+Train an image-based ACT policy on `pollen-robotics/pick_and_place_bottle`:
+
+```
+python nautilus_configs/launch_nautilus_pods.py -a act -d pollen-robotics/pick_and_place_bottle
+```
+
+Train a state-based ACT policy (proprio remap):
+
+```
+python nautilus_configs/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place --state_only_act
+```
+
+Dry-run the generated container script (no cluster submit):
+
+```
+python nautilus_configs/launch_nautilus_pods.py --dry_run -a act -d pollen-robotics/pick_and_place_bottle
+```
+
+Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend as capacity frees):
+
+```
+python nautilus_configs/launch_nautilus_pods.py -j -nl 200 -nr 3 -a act -d pollen-robotics/pick_and_place_bottle
+```
