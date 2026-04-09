@@ -23,36 +23,6 @@ LEROBOT_ALGOS = frozenset({"act", "pi05", "groot"})
 # Kubernetes label for queue grouping (must match queue_watcher.py).
 LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"
 
-# region agent log
-_DEBUG_LOG_PATH = "/home/dwait/dwait_ws/reachy_pollen/.cursor/debug-aded23.log"
-
-
-def _agent_debug_log(
-    message: str,
-    data: Dict[str, Any],
-    hypothesis_id: str,
-    run_id: str = "pre-fix",
-) -> None:
-    import time
-
-    payload = {
-        "sessionId": "aded23",
-        "timestamp": int(time.time() * 1000),
-        "location": "launch_nautilus_pods.py",
-        "message": message,
-        "data": data,
-        "hypothesisId": hypothesis_id,
-        "runId": run_id,
-    }
-    try:
-        with open(_DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(payload) + "\n")
-    except OSError:
-        pass
-
-
-# endregion
-
 
 @dataclass
 class NautilusPodConfig:
@@ -143,6 +113,22 @@ class NautilusPodConfig:
         ),
     ] = None
 
+    save_models: Annotated[
+        bool,
+        tyro.conf.arg(
+            name="save_models",
+            help="Persist lerobot-train outputs to the Nautilus PVC under /pers_vol.",
+        ),
+    ] = False
+
+    models_root: Annotated[
+        str,
+        tyro.conf.arg(
+            name="models_root",
+            help="Base directory for saved model outputs when --save_models is enabled.",
+        ),
+    ] = "/pers_vol/dwait/models/lerobot"
+
 
 @dataclass
 class ContainerSpec:
@@ -177,7 +163,13 @@ def _bash_single_quote(s: str) -> str:
 
 
 def build_lerobot_script(
-    dataset: str, policy_type: str, job_name: str, state_only_act: bool = False, train_extra: Optional[str] = None
+    dataset: str,
+    policy_type: str,
+    job_name: str,
+    state_only_act: bool = False,
+    train_extra: Optional[str] = None,
+    save_models: bool = False,
+    models_root: str = "/pers_vol/dwait/models/lerobot",
 ) -> str:
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
@@ -200,17 +192,6 @@ def build_lerobot_script(
         f"  python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id='{repo}' --push-to-hub 0; \\\n"
         f"fi"
     )
-    # region agent log
-    _agent_debug_log(
-        "build_lerobot_script convert step",
-        {
-            "policy_type": policy_type,
-            "dataset": dataset,
-            "strategy": "dual_path_scripts_or_datasets_v30",
-        },
-        "H1",
-    )
-    # endregion
     train_cmd = (
         f"lerobot-train --dataset.repo_id='{repo}' --policy.type={policy_type} --job_name={job_name} "
         f"--wandb.enable=true --policy.device=cuda --policy.push_to_hub=false"
@@ -219,29 +200,15 @@ def build_lerobot_script(
         train_cmd += " --rename_map='{\"observation.state\":\"observation.environment_state\"}'"
     if train_extra:
         train_cmd += f" {train_extra.strip()}"
+    models_root_q = _bash_single_quote(models_root)
+    if save_models:
+        train_cmd = (
+            f"mkdir -p '{models_root_q}' && "
+            f"run_stamp=$(date +%Y-%m-%d_%H-%M-%S) && "
+            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{job_name} && "
+            f"{train_cmd} --output_dir=\"$train_output_dir\""
+        )
 
-    # region agent log
-    _agent_debug_log(
-        "act proprioception mode resolution",
-        {
-            "policy_type": policy_type,
-            "state_only_act": state_only_act,
-            "uses_rename_map": bool(policy_type == "act" and state_only_act),
-            "has_train_extra": bool(train_extra and train_extra.strip()),
-        },
-        "H2",
-    )
-    # endregion
-    # region agent log
-    _agent_debug_log(
-        "final lerobot-train command built",
-        {
-            "contains_rename_map": "--rename_map" in train_cmd,
-            "command_preview": train_cmd[:400],
-        },
-        "H3",
-    )
-    # endregion
     return f"""conda create -y -n lerobot python=3.12 && \\
 source /opt/conda/etc/profile.d/conda.sh && conda activate lerobot && \\
 export LD_LIBRARY_PATH=/opt/conda/envs/lerobot/lib:$LD_LIBRARY_PATH && \\
@@ -526,16 +493,10 @@ def main() -> None:
                     job_name,
                     state_only_act=cfg.state_only_act,
                     train_extra=cfg.train_extra,
+                    save_models=cfg.save_models,
+                    models_root=cfg.models_root,
                 )
                 print(f"=== {algo} run {i + 1}/{cfg.repeat} job_name={job_name} ===\n{body}\n")
-        # region agent log
-        _agent_debug_log(
-            "dry_run finished",
-            {"has_dual_convert": "lerobot.scripts.convert" in body and "datasets.v30" in body},
-            "H1",
-            run_id="post-fix",
-        )
-        # endregion
         return
 
     actual = cfg.repeat
@@ -572,6 +533,8 @@ def main() -> None:
                 job_name,
                 state_only_act=cfg.state_only_act,
                 train_extra=cfg.train_extra,
+                save_models=cfg.save_models,
+                models_root=cfg.models_root,
             )
 
         ctr = ContainerSpec(name=f"lerobot-{algo.lower()}-s{seed}", shell_body=shell)

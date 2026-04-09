@@ -268,6 +268,8 @@ Without that secret, runs will not show up under your W&B account, or training m
 | `--dry_run` | | Print the generated container script and exit (no `kubectl`). |
 | `--state_only_act` | | For ACT on proprio-only data, adds `--rename_map='{"observation.state":"observation.environment_state"}'` to training. |
 | `--train_extra` | | Single string of extra arguments appended to `lerobot-train` (quote carefully in your shell). |
+| `--save_models` | | Persist training outputs: creates a timestamped `--output_dir` under the PVC (default base `--models_root`). |
+| `--models_root` | | Base directory on the pod for saved runs when `--save_models` is set (default `/pers_vol/dwait/models/lerobot`). |
 
 **Queuing:** If you use `--jobs` and set `--namespace_pod_limit` to a positive value, the launcher labels jobs with a queue group, starts as many as fit, and keeps unsuspending the rest as pods finish. If you interrupt that process (e.g. Ctrl+C), re-attach with [`nautilus_configs/queue_watcher.py`](nautilus_configs/queue_watcher.py) using the printed `--label` and the same `-nl` (and concurrency) you used at launch.
 
@@ -283,6 +285,12 @@ Train a state-based ACT policy (proprio remap):
 
 ```
 python nautilus_configs/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place --state_only_act
+```
+
+Train with checkpoints saved on the cluster PVC (`/pers_vol`):
+
+```
+python nautilus_configs/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place --state_only_act --save_models
 ```
 
 Dry-run the generated container script (no cluster submit):
