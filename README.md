@@ -173,7 +173,7 @@ lerobot-record `
 ```
 lerobot-record \
   --robot.type=reachy2 \
-  --robot.ip_address="192.168.137.162" \
+  --robot.ip_address="localhost" \
   --robot.id="r2-0008" \
   --robot.use_external_commands=true \
   --robot.with_mobile_base=false \
@@ -187,7 +187,7 @@ lerobot-record \
   --robot.camera_width=640 \
   --robot.camera_height=480 \
   --teleop.type=reachy2_teleoperator \
-  --teleop.ip_address="192.168.137.162" \
+  --teleop.ip_address="localhost" \
   --teleop.use_present_position=true \
   --teleop.with_mobile_base=false \
   --teleop.with_l_arm=true \
@@ -195,20 +195,26 @@ lerobot-record \
   --teleop.with_neck=true \
   --teleop.with_antennas=false \
   --dataset.repo_id="erl-hub/reachy-pick-and-place-images" \
-  --dataset.root="outputs/reachy_test" \
-  --dataset.single_task="Reachy 2 pick and place test" \
+  --dataset.root="outputs/reachy_local_test" \
+  --dataset.single_task="Reachy 2 local recording" \
   --dataset.num_episodes=1 \
   --dataset.episode_time_s=30 \
   --dataset.fps=15 \
   --dataset.vcodec=h264 \
-  --dataset.streaming_encoding=false \
   --dataset.push_to_hub=true \
   --display_data=false \
   --play_sounds=false \
   --resume=false
 ```
+
 ```
-docker run -dit   --name lerobot_container   -v $(pwd)/robot_reachy2.py:/lerobot/src/lerobot/robots/reachy2/robot_reachy2.py   huggingface/lerobot-cpu sleep infinity
+docker run -dit \
+  --name lerobot_container \
+  --net=host \
+  --pid=host \
+  -v $(pwd)/robot_reachy2.py:/lerobot/src/lerobot/robots/reachy2/robot_reachy2.py \
+  huggingface/lerobot-cpu \
+  sleep infinity    
 ```
 
 - Remove or rename dataset after every recording:
