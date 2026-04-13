@@ -132,13 +132,8 @@ lerobot-record `
 --display_data=false
 ```
 
-<<<<<<< HEAD
-- Higher Frequency Setup
-
-=======
 Higher Frequency Setup
 - Windows
->>>>>>> cd98f545a828a77436ee8db7bb40f3a73b6ecfe6
 ```
 lerobot-record `
 --robot.type=reachy2 `
@@ -309,9 +304,7 @@ lerobot-train --dataset.repo_id=pollen-robotics/pick_and_place_bottle --policy.t
 
 ### Training on Nautilus cluster
 
-LeRobot-on-Nautilus code lives under `[nautilus/training/](nautilus/training/)`: the launcher `[launch_nautilus_pods.py](nautilus/training/launch_nautilus_pods.py)`, Kubernetes Pod/Job templates (`db-lerobot-*.yaml`), and `[queue_watcher.py](nautilus/training/queue_watcher.py)` for job queuing.
-
-From the **repository root**, with `kubectl` configured for your namespace, run the launcher; it applies `kubectl apply` to generated manifests.
+LeRobot-on-Nautilus code lives under `(nautilus/training/)`: the launcher `(nautilus/training/launch_nautilus_pods.py)`, Kubernetes Pod/Job templates (`db-lerobot-*.yaml`), and `(nautilus/training/queue_watcher.py)` for job queuing.
 
 Each training container: creates a Conda env, installs FFmpeg and the right `lerobot[...]` extras, converts the dataset from v2.1 to v3.0 when needed, then runs `lerobot-train` on CUDA with Weights & Biases enabled and `policy.push_to_hub=false` (override or extend with `--train_extra`).
 
@@ -342,18 +335,23 @@ Without that secret, runs will not show up under your W&B account, or training m
 | `--models_root`         |       | Base directory on the pod for saved runs when `--save_models` is set (default `/pers_vol/dwait/saved_models/lerobot`).                                                           |
 
 
-**Queuing:** If you use `--jobs` and set `--namespace_pod_limit` to a positive value, the launcher labels jobs with a queue group, starts as many as fit, and keeps unsuspending the rest as pods finish. If you interrupt that process (e.g. Ctrl+C), re-attach with `[nautilus/training/queue_watcher.py](nautilus/training/queue_watcher.py)` using the printed `--label` and the same `-nl` (and concurrency) you used at launch.
+**Queuing:** If you use `--jobs` and set `--namespace_pod_limit` to a positive value, the launcher labels jobs with a queue group, starts as many as fit, and keeps unsuspending the rest as pods finish. If you interrupt that process (e.g. Ctrl+C), re-attach with `(nautilus/training/queue_watcher.py)` using the printed `--label` and the same `-nl` (and concurrency) you used at launch.
 
 #### Examples
 
 Train an image-based ACT policy on `pollen-robotics/pick_and_place_bottle`:
-
 ```
 python nautilus/training/launch_nautilus_pods.py -a act -d pollen-robotics/pick_and_place_bottle
 ```
 
-Train a state-based ACT policy (proprio remap):
+Train an image-based ACT policy on `pollen-robotics/pick_and_place_bottle` and `erl-hub/reachy-pick-and-place-images` and saving it to HuggingFace:
+```
+python nautilus/training/launch_nautilus_pods.py -a act -d pollen-robotics/pick_and_place_bottle -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --hf_token_env MY_HF_TOKEN 
+python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place-images -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --hf_token_env MY_HF_TOKEN
+```
 
+
+Train a state-based ACT policy (proprio remap):
 ```
 python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place --state_only_act
 ```

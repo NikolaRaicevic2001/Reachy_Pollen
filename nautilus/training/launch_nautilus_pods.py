@@ -21,8 +21,7 @@ import tyro
 import yaml
 
 LEROBOT_ALGOS = frozenset({"act", "pi05", "groot"})
-# Kubernetes label for queue grouping (must match queue_watcher.py).
-LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"
+LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"           # Kubernetes label for queue grouping (must match queue_watcher.py)
 _TRAINING_DIR = Path(__file__).resolve().parent
 
 
@@ -129,7 +128,31 @@ class NautilusPodConfig:
             name="models_root",
             help="Base directory for saved model outputs when --save_models is enabled.",
         ),
-    ] = "/pers_vol/dwait/saved_models/lerobot"
+    ] = "/nikola_vol/saved_models/reachy"
+
+    upload_to_hub: Annotated[
+        bool,
+        tyro.conf.arg(
+            name="upload_to_hub",
+            help="Upload each trained model folder to Hugging Face model repo after training.",
+        ),
+    ] = False
+
+    hf_model_repo: Annotated[
+        Optional[str],
+        tyro.conf.arg(
+            name="hf_model_repo",
+            help="Target HF model repo id for uploads (e.g. erl-hub/reachy-act). Required with --upload_to_hub.",
+        ),
+    ] = None
+
+    hf_token_env: Annotated[
+        str,
+        tyro.conf.arg(
+            name="hf_token_env",
+            help="Environment variable name holding HF write token inside the pod.",
+        ),
+    ] = "HF_TOKEN"
 
 
 @dataclass
@@ -172,6 +195,9 @@ def build_lerobot_script(
     train_extra: Optional[str] = None,
     save_models: bool = False,
     models_root: str = "/pers_vol/dwait/saved_models/lerobot",
+    upload_to_hub: bool = False,
+    hf_model_repo: Optional[str] = None,
+    hf_token_env: str = "HF_TOKEN",
 ) -> str:
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
@@ -203,12 +229,48 @@ def build_lerobot_script(
     if train_extra:
         train_cmd += f" {train_extra.strip()}"
     models_root_q = _bash_single_quote(models_root)
-    if save_models:
+    dataset_slug = _dataset_slug(dataset)
+    if save_models or upload_to_hub:
         train_cmd = (
             f"mkdir -p '{models_root_q}' && "
             f"run_stamp=$(date +%Y-%m-%d_%H-%M-%S) && "
-            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{job_name} && "
+            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{dataset_slug}-{job_name} && "
             f"{train_cmd} --output_dir=\"$train_output_dir\""
+        )
+
+    if upload_to_hub:
+        if not hf_model_repo:
+            raise ValueError("--hf_model_repo is required when --upload_to_hub is enabled")
+        hf_repo_q = _bash_single_quote(hf_model_repo)
+        hf_token_env_q = _bash_single_quote(hf_token_env)
+        train_cmd += (
+            " && "
+            "if [ -z \"${train_output_dir:-}\" ]; then "
+            "echo 'train_output_dir was not set; cannot upload to HF' >&2; exit 1; "
+            "fi && "
+            f"if [ -z \"${{{hf_token_env_q}:-}}\" ]; then "
+            f"echo 'Missing HF token env var: {hf_token_env_q}' >&2; exit 1; "
+            "fi && "
+            "pip install -q huggingface_hub && "
+            f"HF_MODEL_REPO='{hf_repo_q}' HF_TOKEN_ENV='{hf_token_env_q}' "
+            "python - <<'PY'\n"
+            "import os\n"
+            "from huggingface_hub import HfApi\n\n"
+            "output_dir = os.environ['train_output_dir']\n"
+            "repo_id = os.environ['HF_MODEL_REPO']\n"
+            "token_env = os.environ['HF_TOKEN_ENV']\n"
+            "token = os.environ[token_env]\n"
+            "path_in_repo = os.path.basename(output_dir.rstrip('/'))\n\n"
+            "api = HfApi()\n"
+            "api.upload_folder(\n"
+            "    folder_path=output_dir,\n"
+            "    path_in_repo=path_in_repo,\n"
+            "    repo_id=repo_id,\n"
+            "    token=token,\n"
+            "    repo_type='model',\n"
+            ")\n"
+            "print(f'Uploaded {output_dir} -> {repo_id}/{path_in_repo}')\n"
+            "PY"
         )
 
     return f"""conda create -y -n lerobot python=3.12 && \\
@@ -469,6 +531,9 @@ def main() -> None:
     if algo != "DUMMY" and not cfg.dataset:
         print("Error: --dataset is required unless --algo DUMMY", file=sys.stderr)
         sys.exit(1)
+    if cfg.upload_to_hub and not cfg.hf_model_repo:
+        print("Error: --hf_model_repo is required with --upload_to_hub", file=sys.stderr)
+        sys.exit(1)
 
     use_job = cfg.jobs and algo != "DUMMY"
     nautilus_type = "job" if use_job else "pod"
@@ -498,6 +563,9 @@ def main() -> None:
                     train_extra=cfg.train_extra,
                     save_models=cfg.save_models,
                     models_root=cfg.models_root,
+                    upload_to_hub=cfg.upload_to_hub,
+                    hf_model_repo=cfg.hf_model_repo,
+                    hf_token_env=cfg.hf_token_env,
                 )
                 print(f"=== {algo} run {i + 1}/{cfg.repeat} job_name={job_name} ===\n{body}\n")
         return
@@ -508,6 +576,8 @@ def main() -> None:
         print("  DUMMY: sleep pod (jobs flag ignored)")
     else:
         print(f"  dataset={cfg.dataset} algo={algo}")
+        if cfg.upload_to_hub:
+            print(f"  upload_to_hub=true hf_model_repo={cfg.hf_model_repo} token_env={cfg.hf_token_env}")
 
     initial_slots = actual
     if queuing:
@@ -538,6 +608,9 @@ def main() -> None:
                 train_extra=cfg.train_extra,
                 save_models=cfg.save_models,
                 models_root=cfg.models_root,
+                upload_to_hub=cfg.upload_to_hub,
+                hf_model_repo=cfg.hf_model_repo,
+                hf_token_env=cfg.hf_token_env,
             )
 
         ctr = ContainerSpec(name=f"lerobot-{algo.lower()}-s{seed}", shell_body=shell)
