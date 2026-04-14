@@ -222,7 +222,6 @@ Remove-Item -Recurse -Force "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\r
 
 
 ### Upload the datasets
-
 ```
 # Navigate to the data
 cd "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place"
@@ -232,7 +231,6 @@ huggingface-cli upload erl-hub/reachy-pick-and-place . . --repo-type=dataset
 ```
 
 ### Profiling
-
 ```
 Get-Process | Where-Object {$_.ProcessName -like "*python*"}
 ```
@@ -369,14 +367,13 @@ Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend
 python nautilus/training/launch_nautilus_pods.py -j -nl 200 -nr 3 -a act -d pollen-robotics/pick_and_place_bottle
 ```
 
-## Deploying policies on reachy2
-
+### Deploying policies on reachy2
 Pass the repo for trained policy best checkpoint as `policy.path`. Videos and trajectories from rollouts will be saved at `dataset.repo_id`
 
 ```
 lerobot-record `
   --robot.type=reachy2 `
-  --robot.ip_address="192.168.10.172" `
+  --robot.ip_address="192.168.137.162" `
   --robot.id="r2-0008" `
   --robot.use_external_commands=false `
   --robot.with_mobile_base=false `
@@ -401,3 +398,11 @@ lerobot-record `
   --play_sounds=false `
   --resume=true
 ```
+
+### Policy registry
+
+Use this table to track policies you train or deploy. Extend rows as you add methods; replace placeholders with your checkpoints, parameter counts, and run notes.
+
+| Policy | Method | Size | Hardware | 
+| ------ | ------ | ---- | -------- | 
+| `act` | Action Chunking Transformer (`--policy.type=act`) | 250MB | CPU; Intel Core 9 (RTX GeForce 2080+)||
