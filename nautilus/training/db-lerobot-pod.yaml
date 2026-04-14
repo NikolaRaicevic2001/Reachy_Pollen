@@ -18,6 +18,11 @@ spec:
         secretKeyRef:
           name: wandb-secret
           key: api-key
+    - name: HF_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: hf-token-secret
+          key: hf-access-token
     - name: GIT_ACCESS_TOKEN
       valueFrom:
         secretKeyRef:

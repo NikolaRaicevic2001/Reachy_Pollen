@@ -146,14 +146,6 @@ class NautilusPodConfig:
         ),
     ] = None
 
-    hf_token_env: Annotated[
-        str,
-        tyro.conf.arg(
-            name="hf_token_env",
-            help="Environment variable name holding HF write token inside the pod.",
-        ),
-    ] = "HF_TOKEN"
-
 
 @dataclass
 class ContainerSpec:
@@ -191,13 +183,13 @@ def build_lerobot_script(
     dataset: str,
     policy_type: str,
     job_name: str,
+    seed: int,
     state_only_act: bool = False,
     train_extra: Optional[str] = None,
     save_models: bool = False,
     models_root: str = "/pers_vol/dwait/saved_models/lerobot",
     upload_to_hub: bool = False,
     hf_model_repo: Optional[str] = None,
-    hf_token_env: str = "HF_TOKEN",
 ) -> str:
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
@@ -234,7 +226,7 @@ def build_lerobot_script(
         train_cmd = (
             f"mkdir -p '{models_root_q}' && "
             f"run_stamp=$(date +%Y-%m-%d_%H-%M-%S) && "
-            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{dataset_slug}-{job_name} && "
+            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{dataset_slug}_s{seed} && "
             f"{train_cmd} --output_dir=\"$train_output_dir\""
         )
 
@@ -242,24 +234,23 @@ def build_lerobot_script(
         if not hf_model_repo:
             raise ValueError("--hf_model_repo is required when --upload_to_hub is enabled")
         hf_repo_q = _bash_single_quote(hf_model_repo)
-        hf_token_env_q = _bash_single_quote(hf_token_env)
         train_cmd += (
             " && "
             "if [ -z \"${train_output_dir:-}\" ]; then "
             "echo 'train_output_dir was not set; cannot upload to HF' >&2; exit 1; "
             "fi && "
-            f"if [ -z \"${{{hf_token_env_q}:-}}\" ]; then "
-            f"echo 'Missing HF token env var: {hf_token_env_q}' >&2; exit 1; "
+            "export train_output_dir && "
+            "if [ -z \"${HF_TOKEN:-}\" ]; then "
+            "echo 'Missing HF_TOKEN (set in pod env, e.g. from a Kubernetes secret)' >&2; exit 1; "
             "fi && "
             "pip install -q huggingface_hub && "
-            f"HF_MODEL_REPO='{hf_repo_q}' HF_TOKEN_ENV='{hf_token_env_q}' "
+            f"HF_MODEL_REPO='{hf_repo_q}' "
             "python - <<'PY'\n"
             "import os\n"
             "from huggingface_hub import HfApi\n\n"
             "output_dir = os.environ['train_output_dir']\n"
             "repo_id = os.environ['HF_MODEL_REPO']\n"
-            "token_env = os.environ['HF_TOKEN_ENV']\n"
-            "token = os.environ[token_env]\n"
+            "token = os.environ['HF_TOKEN']\n"
             "path_in_repo = os.path.basename(output_dir.rstrip('/'))\n\n"
             "api = HfApi()\n"
             "api.upload_folder(\n"
@@ -559,13 +550,13 @@ def main() -> None:
                     cfg.dataset,
                     algo,
                     job_name,
+                    seed,
                     state_only_act=cfg.state_only_act,
                     train_extra=cfg.train_extra,
                     save_models=cfg.save_models,
                     models_root=cfg.models_root,
                     upload_to_hub=cfg.upload_to_hub,
                     hf_model_repo=cfg.hf_model_repo,
-                    hf_token_env=cfg.hf_token_env,
                 )
                 print(f"=== {algo} run {i + 1}/{cfg.repeat} job_name={job_name} ===\n{body}\n")
         return
@@ -577,7 +568,7 @@ def main() -> None:
     else:
         print(f"  dataset={cfg.dataset} algo={algo}")
         if cfg.upload_to_hub:
-            print(f"  upload_to_hub=true hf_model_repo={cfg.hf_model_repo} token_env={cfg.hf_token_env}")
+            print(f"  upload_to_hub=true hf_model_repo={cfg.hf_model_repo} (expects HF_TOKEN in pod env)")
 
     initial_slots = actual
     if queuing:
@@ -604,13 +595,13 @@ def main() -> None:
                 cfg.dataset,
                 algo,
                 job_name,
+                seed,
                 state_only_act=cfg.state_only_act,
                 train_extra=cfg.train_extra,
                 save_models=cfg.save_models,
                 models_root=cfg.models_root,
                 upload_to_hub=cfg.upload_to_hub,
                 hf_model_repo=cfg.hf_model_repo,
-                hf_token_env=cfg.hf_token_env,
             )
 
         ctr = ContainerSpec(name=f"lerobot-{algo.lower()}-s{seed}", shell_body=shell)
