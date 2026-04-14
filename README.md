@@ -87,13 +87,7 @@ Rviz: [http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0](http
   - Set the VR flag environmental variable: 
 
 ## Dataset Recording
-
 ### Recording
-
-```
-lerobot-record --robot.type=reachy2 --robot.ip_address=192.168.10.172 --robot.id=r2-0008 --robot.use_external_commands=true --teleop.type=keyboard --robot.with_mobile_base=false --robot.with_torso_camera=false --dataset.repo_id=pollen_robotics/record_test --dataset.single_task="Reachy 2 recording test" --dataset.num_episodes=1 --dataset.episode_time_s=5 --dataset.fps=15 --dataset.push_to_hub=false --dataset.private=true --dataset.streaming_encoding=true --dataset.encoder_threads=2 --display_data=true
-```
-
 ```
 lerobot-record `
 --robot.type=reachy2 `
@@ -158,17 +152,19 @@ lerobot-record `
 --teleop.with_r_arm=true `
 --teleop.with_neck=true `
 --teleop.with_antennas=false `
---dataset.repo_id=erl-hub/reachy-pick-and-place-images `
+--dataset.repo_id=erl-hub/reachy-pick-and-place-test `
+--dataset.root="outputs\reachy_local_test" `
 --dataset.single_task="Reachy 2 pick and place test" `
 --dataset.num_episodes=1 `
---dataset.episode_time_s=30 `
+--dataset.episode_time_s=40 `
 --dataset.fps=15 `
 --dataset.vcodec=h264 `
 --dataset.streaming_encoding=false `
---dataset.push_to_hub=true `
+--dataset.push_to_hub=false `
 --display_data=false `
---resume=true
+--resume=false
 ```
+
 -Linux
 ```
 lerobot-record \
@@ -194,14 +190,14 @@ lerobot-record \
   --teleop.with_r_arm=true \
   --teleop.with_neck=true \
   --teleop.with_antennas=false \
-  --dataset.repo_id="erl-hub/reachy-pick-and-place-images" \
-  --dataset.root="outputs/reachy_local_test" \
+  --dataset.repo_id="erl-hub\reachy-pick-and-place-test2" \
+  --dataset.root="outputs\reachy_local_test" \
   --dataset.single_task="Reachy 2 local recording" \
   --dataset.num_episodes=1 \
-  --dataset.episode_time_s=30 \
+  --dataset.episode_time_s=45 \
   --dataset.fps=15 \
   --dataset.vcodec=h264 \
-  --dataset.push_to_hub=true \
+  --dataset.push_to_hub=false \
   --display_data=false \
   --play_sounds=false \
   --resume=false
@@ -225,7 +221,6 @@ Remove-Item -Recurse -Force "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\r
 ```
 
 
-
 ### Upload the datasets
 
 ```
@@ -247,21 +242,23 @@ py-spy record -o lerobot_profile.svg --pid 24016
 ```
 
 ### Replaying
-
 - Locally
-
 ```
 lerobot-replay `
     --robot.type=reachy2 `
     --robot.ip_address=192.168.137.162 `
+    --robot.id=r2-0008 `
     --robot.use_external_commands=false `
     --robot.with_mobile_base=false `
-    --dataset.repo_id=erl-hub/reachy-pick-and-place-images `
+    --robot.with_l_arm=true `
+    --robot.with_r_arm=true `
+    --robot.with_neck=true `
+    --dataset.repo_id=erl-hub/reachy-pick-and-place-test `
+    --dataset.root=outputs\reachy_local_test `
     --dataset.episode=0
 ```
 
 - Hub
-
 ```
 lerobot-replay `
 --robot.type=reachy2 `
