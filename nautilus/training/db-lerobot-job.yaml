@@ -36,6 +36,8 @@ spec:
         volumeMounts:
         - mountPath: /pers_vol
           name: db-cephfs-volume
+        - mountPath: /nikola_vol
+          name: nikola-volume
         - mountPath: /dev/shm
           name: dshm
         resources:
@@ -77,6 +79,8 @@ spec:
         volumeMounts:
         - mountPath: /pers_vol
           name: db-cephfs-volume
+        - mountPath: /nikola_vol
+          name: nikola-volume
         - mountPath: /dev/shm
           name: dshm
         resources:
@@ -207,6 +211,9 @@ spec:
         - name: db-cephfs-volume
           persistentVolumeClaim:
             claimName: db-cephfs-volume
+        - name: nikola-volume
+          persistentVolumeClaim:
+            claimName: nikola-volume
         - name: dshm
           emptyDir:
             medium: Memory
