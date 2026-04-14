@@ -372,3 +372,35 @@ Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend
 python nautilus/training/launch_nautilus_pods.py -j -nl 200 -nr 3 -a act -d pollen-robotics/pick_and_place_bottle
 ```
 
+## Deploying policies on reachy2
+
+Pass the repo for trained policy best checkpoint as `policy.path`. Videos and trajectories from rollouts will be saved at `dataset.repo_id`
+
+```
+lerobot-record `
+  --robot.type=reachy2 `
+  --robot.ip_address="192.168.10.172" `
+  --robot.id="r2-0008" `
+  --robot.use_external_commands=false `
+  --robot.with_mobile_base=false `
+  --robot.with_l_arm=true `
+  --robot.with_r_arm=true `
+  --robot.with_neck=true `
+  --robot.with_antennas=false `
+  --robot.with_left_teleop_camera=false `
+  --robot.with_right_teleop_camera=false `
+  --robot.with_torso_camera=true `
+  --robot.camera_width=640 `
+  --robot.camera_height=480 `
+  --policy.path=erl-hub/reachy-act-execute-pick-and-place `
+  --dataset.repo_id="erl-hub/eval_reachy-pick-and-place" `
+  --dataset.root="outputs/reachy_local_test" `
+  --dataset.single_task="Reachy 2 rollout local recording" `
+  --dataset.num_episodes=1 `
+  --dataset.episode_time_s=120 `
+  --dataset.fps=15 `
+  --dataset.vcodec=h264 `
+  --dataset.push_to_hub=false `
+  --play_sounds=false `
+  --resume=true
+```
