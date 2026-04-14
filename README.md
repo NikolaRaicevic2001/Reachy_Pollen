@@ -346,7 +346,7 @@ python nautilus/training/launch_nautilus_pods.py -a act -d pollen-robotics/pick_
 
 Train an image-based ACT policy on datasets and saving it to HuggingFace:
 ```
-python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place-images -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --train_extra "--steps=100000 --eval_freq=20000 --wandb.enable=false
+python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place-images -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --train_extra "--steps=100000 --eval_freq=20000 --wandb.enable=false"
 ```
 
 Train a state-based ACT policy (proprio remap):
