@@ -194,13 +194,14 @@ def build_lerobot_script(
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
     if policy_type == "act":
-        pip_install = "pip install 'lerobot[reachy2]'"
+        pip_install = "uv pip install 'lerobot[reachy2]'"
     elif policy_type == "groot":
+        flash_url = "https://github.com/lesj0610/flash-attention/releases/download/v2.8.3-cu12-torch2.10-cp312/flash_attn-2.8.3%2Bcu12torch2.10cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
         pip_install = (
-            "pip install flash-attn --no-build-isolation && pip install 'lerobot[reachy2,groot]'"
+            f"uv pip install --no-deps {flash_url} && uv pip install --no-build-isolation 'lerobot[groot,reachy2]'"
         )
     elif policy_type == "pi05":
-        pip_install = "pip install 'lerobot[reachy2,pi]'"
+        pip_install = "uv pip install 'lerobot[reachy2,pi]'"
     else:
         raise ValueError(policy_type)
     # lerobot>=~0.5: convert lives under lerobot.scripts; 0.4.x uses lerobot.datasets.v30
@@ -212,29 +213,30 @@ def build_lerobot_script(
         f"  python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id='{repo}' --push-to-hub 0; \\\n"
         f"fi"
     )
-    train_cmd = (
-        f"lerobot-train --dataset.repo_id='{repo}' --policy.type={policy_type} --job_name={job_name} "
+    dataset_slug = _dataset_slug(dataset)
+    main_cmd = (
+        f"hf download {repo} --repo-type dataset --local-dir /home/user_lerobot/{dataset_slug} && "
+        f"lerobot-train --dataset.repo_id='{repo}' --dataset.root=/home/user_lerobot/{dataset_slug} --policy.type={policy_type} --job_name={job_name} "
         f"--wandb.enable=true --policy.device=cuda --policy.push_to_hub=false"
     )
     if policy_type == "act" and state_only_act:
-        train_cmd += " --rename_map='{\"observation.state\":\"observation.environment_state\"}'"
+        main_cmd += " --rename_map='{\"observation.state\":\"observation.environment_state\"}'"
     if train_extra:
-        train_cmd += f" {train_extra.strip()}"
+        main_cmd += f" {train_extra.strip()}"
     models_root_q = _bash_single_quote(models_root)
-    dataset_slug = _dataset_slug(dataset)
     if save_models or upload_to_hub:
-        train_cmd = (
+        main_cmd = (
             f"mkdir -p '{models_root_q}' && "
             f"run_stamp=$(date +%Y-%m-%d_%H-%M-%S) && "
             f"train_output_dir='{models_root_q}'/${{run_stamp}}-{dataset_slug}_s{seed} && "
-            f"{train_cmd} --output_dir=\"$train_output_dir\""
+            f"{main_cmd} --output_dir=\"$train_output_dir\""
         )
 
     if upload_to_hub:
         if not hf_model_repo:
             raise ValueError("--hf_model_repo is required when --upload_to_hub is enabled")
         hf_repo_q = _bash_single_quote(hf_model_repo)
-        train_cmd += (
+        main_cmd += (
             " && "
             "if [ -z \"${train_output_dir:-}\" ]; then "
             "echo 'train_output_dir was not set; cannot upload to HF' >&2; exit 1; "
@@ -243,7 +245,7 @@ def build_lerobot_script(
             "if [ -z \"${HF_TOKEN:-}\" ]; then "
             "echo 'Missing HF_TOKEN (set in pod env, e.g. from a Kubernetes secret)' >&2; exit 1; "
             "fi && "
-            "pip install -q huggingface_hub && "
+            "uv pip install -q huggingface_hub && "
             f"HF_MODEL_REPO='{hf_repo_q}' "
             "python - <<'PY'\n"
             "import os\n"
@@ -264,13 +266,10 @@ def build_lerobot_script(
             "PY"
         )
 
-    return f"""conda create -y -n lerobot python=3.12 && \\
-source /opt/conda/etc/profile.d/conda.sh && conda activate lerobot && \\
-export LD_LIBRARY_PATH=/opt/conda/envs/lerobot/lib:$LD_LIBRARY_PATH && \\
-conda install -y ffmpeg=7.1.1 -c conda-forge && \\
+    return f"""source /lerobot/.venv/bin/activate && \\
 {pip_install} && \\
 {convert_dual} && \\
-{train_cmd}"""
+{main_cmd}"""
 
 
 def build_dummy_script() -> str:

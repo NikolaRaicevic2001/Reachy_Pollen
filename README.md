@@ -307,13 +307,13 @@ kubectl create secret generic wandb-secret-nikola --from-literal=api-key=<YOUR_W
 
 Without that secret, runs will not show up under your W&B account, or training may fail if not key is found.
 
-**Supported policy:** use `**act`** for real training runs. The launcher also accepts `pi05` and `groot`, but those paths are **not fully functional yet and are not supported** in this workflow—expect breakage if you try them until they are finished and documented.
+**Supported policy:** use `act` or `groot` for real training runs. The launcher also accepts `pi05`, but this is **not fully functional yet and is not supported** in this workflow.
 
 
 | Option                  | Short | Description                                                                                                                                                                      |
 | ----------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--dataset`             | `-d`  | Hugging Face dataset repo id (required unless `--algo DUMMY`).                                                                                                                   |
-| `--algo`                | `-a`  | `**act`** — supported. `**pi05**`, `**groot**` — experimental in the launcher only; not supported yet. `**DUMMY**` — long-running sleep pod for cluster tests; ignores `--jobs`. |
+| `--algo`                | `-a`  | `act` , `groot`  — supported. `pi05` — experimental in the launcher only; not supported yet. `DUMMY` — long-running sleep pod for cluster tests; ignores `--jobs`. |
 | `--repeat`              | `-nr` | Number of runs, each with a random seed (default `1`).                                                                                                                           |
 | `--jobs`                | `-j`  | Use a Kubernetes **Job** instead of a **Pod** (template `db-lerobot-job.yaml`).                                                                                                  |
 | `--yaml_file`           | `-y`  | Custom path to Pod or Job YAML template (defaults: templates next to the launcher, `db-lerobot-pod.yaml` / `db-lerobot-job.yaml` under `nautilus/training/`).                    |
