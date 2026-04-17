@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: gpu-container
-    image: huggingface/lerobot-gpu@sha256:da85358de50c2ad135d54628e8b92a69a24eb9fe2b518f2d0d82c97a25b3f709
+    image: nikolaraicevic2001/erl-lerobot:latest
     command: ["/bin/bash", "-c"]
     args: [
         "git pull && \

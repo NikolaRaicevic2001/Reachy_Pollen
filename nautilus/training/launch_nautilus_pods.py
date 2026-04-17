@@ -194,12 +194,9 @@ def build_lerobot_script(
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
     if policy_type == "act":
-        pip_install = "uv pip install 'lerobot[reachy2]'"
+        pip_install = ":"
     elif policy_type == "groot":
-        flash_url = "https://github.com/lesj0610/flash-attention/releases/download/v2.8.3-cu12-torch2.10-cp312/flash_attn-2.8.3%2Bcu12torch2.10cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
-        pip_install = (
-            f"uv pip install --no-deps {flash_url} && uv pip install --no-build-isolation 'lerobot[groot,reachy2]'"
-        )
+        pip_install = ":"
     elif policy_type == "pi05":
         pip_install = "uv pip install 'lerobot[reachy2,pi]'"
     else:

@@ -293,6 +293,15 @@ python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id=pollen-robot
 ```
 lerobot-train --dataset.repo_id=pollen-robotics/pick_and_place_bottle --policy.type=act --job_name=reachy2_lerobot_act --wandb.enable=false --policy.device=cuda --policy.push_to_hub=false"
 ```
+```
+lerobot-train --dataset.repo_id=erl-hub/reachy-pick-and-place-images --policy.type=groot --job_name=groot --wandb.enable=true --policy.device=cuda --policy.push_to_hub=false --batch_size=4 --steps=20000 --save_freq=2000 --log_freq=50 --policy.tune_diffusion_model=false --dataset.root /home/user_lerobot/erl_hub/
+```
+
+#### Dowloading Datasets Locally (Optional)
+```
+hf download erl-hub/reachy-pick-and-place-images --repo-type dataset --local-dir /home/user_lerobot/erl_hub
+hf download ganatrask/NOVA --repo-type dataset --local-dir /home/user_lerobot/NOVA
+```
 
 ### Training on Nautilus cluster
 LeRobot-on-Nautilus code lives under `(nautilus/training/)`: the launcher `(nautilus/training/launch_nautilus_pods.py)`, Kubernetes Pod/Job templates (`db-lerobot-*.yaml`), and `(nautilus/training/queue_watcher.py)` for job queuing.
@@ -403,167 +412,3 @@ Use this table to track policies you train or deploy. Extend rows as you add met
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#### Groot
-```
-apt-get update && apt-get install -y wget ca-certificates git build-essential
-
-# Install miniconda
-wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
-bash /tmp/miniconda.sh -b -p /opt/miniconda
-eval "$(/opt/miniconda/bin/conda shell.bash hook)"
-conda create -y -n lerobot python=3.12                  # Accept terms of service using the commands in error message
-conda activate lerobot
-
-conda install -y -c conda-forge ffmpeg=7.1.1
-
-pip install 'lerobot[reachy2]'
-pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126    
-pip install "ninja>=1.11.1,<2.0.0" "packaging>=24.2,<26.0"
-
-
-# Build flash-attn
-export MAX_JOBS=4
-export TORCH_CUDA_ARCH_LIST="7.5"  
-pip install "flash-attn>=2.5.9,<3.0.0" --no-build-isolation
-pip 
-
-# Finally, install lerobot with groot and reachy2 support
-pip install "lerobot[reachy2,groot]==0.5.1"
-
-
-# Verify
-python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
-python -c "import flash_attn; print('flash-attn OK')"
-
-
-# Train
-python -m lerobot.scripts.convert_dataset_v21_to_v30 --repo-id pollen-robotics/pick_and_place_bottle
-
-lerobot-train \
-  --dataset.repo_id='pollen-robotics/pick_and_place_bottle' \
-  --policy.type=groot \
-  --job_name='reachy2_groot_pick_and_place_bottle' \
-  --policy.device=cuda \
-  --wandb.enable=true \
-  --policy.push_to_hub=false
-
-```
-
-
-
-
-conda install -y -c conda-forge ffmpeg=7.1.1
-pip install --upgrade pip setuptools==80.10.2
-pip install "lerobot[reachy2,groot]==0.5.1"
-
-pip install --force-reinstall \
-  torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 \
-  --index-url https://download.pytorch.org/whl/cu126
-
-# pin transformers only, without letting pip re-resolve torch
-pip install --force-reinstall --no-deps transformers==4.52.4
-pip install --force-reinstall --no-deps accelerate==1.13.0
-
-
-# flash-attn (if needed)
-pip install "ninja>=1.11.1,<2.0.0" "packaging>=24.2,<26.0"
-pip install "flash-attn>=2.5.9,<3.0.0" --no-build-isolation
-
-pip install --force-reinstall --no-deps tokenizers==0.21.4
-pip install --force-reinstall --no-deps numpy==2.2.6 setuptools==80.10.2
-
-pip install --force-reinstall --no-deps \
-  "huggingface-hub==0.36.2" \
-  "fsspec==2026.2.0" \
-  "packaging==25.0"
-
-pip install --force-reinstall --no-deps \
-  "transformers==4.56.2" \
-  "tokenizers==0.21.4" \
-  "huggingface-hub==0.36.2"
-
-pip install --force-reinstall --no-deps tokenizers==0.22.2
-
-pip install -U decord
-
-pip install -U av
-
-pip install --force-reinstall --no-deps "av==15.1.0"
-
-pip install --force-reinstall --no-deps \
-  "transformers==4.57.1" \
-  "tokenizers==0.22.2" \
-  "huggingface-hub==0.36.2"
-
-pip install --force-reinstall --no-deps \
-  "transformers==4.57.6" \
-  "tokenizers==0.22.2" \
-  "huggingface-hub==0.36.2"
-
-lerobot-train   --dataset.repo_id='pollen-robotics/pick_and_place_bottle'   --dataset.video_backend=pyav   --policy.type=groot   --job_name='reachy2_groot_smoke'   --policy.device=cuda   --wandb.enable=true   --policy.push_to_hub=false   --batch_size=2   --policy.batch_size=8   --num_workers=2   --policy.dataloader_num_workers=2   --steps=200   --save_freq=200
-
-
-
-
-
-
-
-
-
-
-
-
-# NOVA
-apt-get update && apt-get install -y wget ca-certificates git build-essential
-wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
-bash /tmp/miniconda.sh -b -p /opt/miniconda
-eval "$(/opt/miniconda/bin/conda shell.bash hook)"
-
-git clone https://github.com/NVIDIA/Isaac-GR00T
-cd Isaac-GR00T
-
-conda create -n gr00t python=3.10
-conda activate gr00t
-pip install --upgrade setuptools
-pip install -e .[base]
-pip install --no-build-isolation flash-attn==2.7.1.post4 
-
-pip install torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126 
-pip install psutil ninja packaging
-pip install "flash-attn==2.7.4.post1" --no-build-isolation
-
-pip install -U pip setuptools wheel
-
-git clone --recurse-submodules https://github.com/ganatrask/NOVA.git
-cd NOVA/
-git submodule update --init --recursive
-cd Isaac-GR00T/
-patch -p1 < ../patches/add_reachy2_embodiment.patch
-pip install -e .
-
-apt-get update && apt-get install -y openmpi-bin libopenmpi-dev
-pip install mpi4py
-apt-get update && apt-get install -y ffmpeg libavcodec-dev libavformat-dev libavutil-dev
-
-hf download ganatrask/NOVA --local-dir /workspace/data/reachy2_100 --repo-type=dataset
-python -m gr00t.experiment.launch_finetune --base-model-path nvidia/GR00T-N1.6-3B --dataset-path /workspace/data/reachy2_100/ --embodiment-tag REACHY2   --modality-config-path /workspace/NOVA/configs/reachy2_modality_config.py --num-gpus 1 --global-batch-size 32 --max-steps 30000 --save-steps 3000 --output-dir ./checkpoints/groot-reachy2
-
-
-#Upload
-hf auth login
-hf repo create erl-hub/reachy-groot --type model --private   # once, if needed
-hf upload erl-hub/reachy-groot-NOVA ./checkpoints/groot-reachy2/checkpoint-30000 . --repo-type model
