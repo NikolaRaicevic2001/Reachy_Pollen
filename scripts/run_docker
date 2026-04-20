@@ -18,6 +18,7 @@ docker run -it --rm --name lerobot_container --gpus all --runtime=nvidia --ipc=h
     -v /dev/drm_dp_aux0:/dev/drm_dp_aux0 \
     -v /dev/dri:/dev/dri \
     -v /dev/shm:/dev/shm \
+    -v ${ROOT_DIR}/scripts/robot_reachy2_mod.py:/lerobot/src/lerobot/robots/reachy2/robot_reachy2.py \
     -w /lerobot \
     --network host \
     nikolaraicevic2001/erl-lerobot:latest \

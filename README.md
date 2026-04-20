@@ -154,7 +154,7 @@ lerobot-record `
 --teleop.with_antennas=false `
 --dataset.repo_id=erl-hub/reachy-pick-and-place-test `
 --dataset.root="outputs\reachy_local_test" `
---dataset.single_task="Reachy 2 pick and place test" `
+--dataset.single_task="Reachy 2 pick and place test" `  
 --dataset.num_episodes=1 `
 --dataset.episode_time_s=40 `
 --dataset.fps=15 `
@@ -383,7 +383,7 @@ lerobot-record \
   --policy.path=erl-hub/reachy-groot-execute-pick-and-place \
   --dataset.repo_id="erl-hub/eval_reachy-pick-and-place" \
   --dataset.root="outputs/reachy_local_test" \
-  --dataset.single_task="Reachy 2 rollout local recording" \
+  --dataset.single_task="Pick up the tomato soup can and place it into the metal bowl" \
   --dataset.num_episodes=1 \
   --dataset.episode_time_s=120 \
   --dataset.fps=15 \
