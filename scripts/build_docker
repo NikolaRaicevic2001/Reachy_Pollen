@@ -2,4 +2,4 @@
 
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && cd ../ && pwd )"
 
-docker build -t reachy2:latest -f ${ROOT_DIR}/docker/Dockerfile $ROOT_DIR
+docker build -t nikolaraicevic2001/erl-lerobot:latest -f ${ROOT_DIR}/docker/Dockerfile $ROOT_DIR

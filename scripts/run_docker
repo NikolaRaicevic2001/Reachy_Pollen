@@ -6,7 +6,7 @@ ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && cd ../ && pwd
 xhost +local:docker
 
 # Set the Docker parameters
-docker run -it --rm --name robot_control --gpus all --runtime=nvidia --ipc=host \
+docker run -it --rm --name lerobot_container --gpus all --runtime=nvidia --ipc=host \
     -e DISPLAY \
     -e ROS_LOCALHOST_ONLY=0 \
     -e NVIDIA_DRIVER_CAPABILITIES=all \
@@ -20,4 +20,4 @@ docker run -it --rm --name robot_control --gpus all --runtime=nvidia --ipc=host 
     -v /dev/shm:/dev/shm \
     -w /lerobot \
     --network host \
-    reachy2:latest \
+    nikolaraicevic2001/erl-lerobot:latest \
