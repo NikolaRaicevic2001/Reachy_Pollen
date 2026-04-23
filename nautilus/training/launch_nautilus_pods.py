@@ -241,6 +241,7 @@ def build_lerobot_script(
     models_root: str = "/pers_vol/dwait/saved_models/lerobot",
     upload_to_hub: bool = False,
     hf_model_repo: Optional[str] = None,
+    suffix: str = "",
 ) -> str:
     """Bash body (after set -e): conda env, ffmpeg, pip extras, convert, train (Nautilus image)."""
     repo = _bash_single_quote(dataset)
@@ -262,6 +263,10 @@ def build_lerobot_script(
         f"fi"
     )
     dataset_slug = _dataset_slug(dataset)
+    suffix_seg = _resource_suffix_fragment(suffix)
+    train_dir_mid = (
+        f"-{suffix_seg}" if suffix_seg else ""
+    )
     main_cmd = (
         f"hf download {repo} --repo-type dataset --local-dir /home/user_lerobot/{dataset_slug} && "
         f"lerobot-train --dataset.repo_id='{repo}' --dataset.root=/home/user_lerobot/{dataset_slug} --policy.type={policy_type} --job_name={job_name} "
@@ -276,7 +281,7 @@ def build_lerobot_script(
         main_cmd = (
             f"mkdir -p '{models_root_q}' && "
             f"run_stamp=$(date +%Y-%m-%d_%H-%M-%S) && "
-            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{dataset_slug}_s{seed} && "
+            f"train_output_dir='{models_root_q}'/${{run_stamp}}-{policy_type}{train_dir_mid}-{dataset_slug}_s{seed} && "
             f"{main_cmd} --output_dir=\"$train_output_dir\""
         )
 
@@ -688,6 +693,7 @@ def main() -> None:
                     models_root=cfg.models_root,
                     upload_to_hub=cfg.upload_to_hub,
                     hf_model_repo=cfg.hf_model_repo,
+                    suffix=cfg.suffix,
                 )
                 print(f"=== {algo} run {i + 1}/{cfg.repeat} job_name={job_name} ===\n{body}\n")
         return
@@ -733,6 +739,7 @@ def main() -> None:
                 models_root=cfg.models_root,
                 upload_to_hub=cfg.upload_to_hub,
                 hf_model_repo=cfg.hf_model_repo,
+                suffix=cfg.suffix,
             )
 
         ctr = ContainerSpec(name=f"lerobot-{algo.lower()}-s{seed}", shell_body=shell)
