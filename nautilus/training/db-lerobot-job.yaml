@@ -95,50 +95,21 @@ spec:
       
       affinity:
         nodeAffinity:
-          # GPU preferences only, grouped by VRAM (descending) per cluster inventory.
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
+          # Hard GPU constraint: schedule only on these GPU products.
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: nvidia.com/gpu.product
                 operator: In
                 values:
                 - "NVIDIA-GH200-480GB"
-          - weight: 80
-            preference:
-              matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values:
                 - "NVIDIA-A100-80GB-PCIe"
                 - "NVIDIA-A100-SXM4-80GB"
                 - "NVIDIA-A100-80GB-PCIe-MIG-1g.10gb"
-          - weight: 60
-            preference:
-              matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values:
                 - "NVIDIA-RTX-A6000"
-                - "NVIDIA-A40"
                 - "NVIDIA-L40"
-          - weight: 50
-            preference:
-              matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values:
+                - "NVIDIA-A40"
                 - "NVIDIA-A100-PCIE-40GB"
-          - weight: 40
-            preference:
-              matchExpressions:
-              - key: nvidia.com/gpu.product
-                operator: In
-                values:
-                - "NVIDIA-GeForce-RTX-4090"
-                - "NVIDIA-RTX-A5000"
-                - "NVIDIA-A10"
-                - "NVIDIA-L4"
       restartPolicy: Never
       volumes:
         - name: db-cephfs-volume
