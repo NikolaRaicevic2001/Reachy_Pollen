@@ -308,6 +308,12 @@ Train an image-based ACT policy on datasets and saving it to HuggingFace:
 python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place-images -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --train_extra "--steps=100000 --eval_freq=20000 --wandb.enable=false"
 ```
 
+Finetune GR00T on custom dataset and upload the model to HuggingFace:
+```
+python launch_nautilus_pods.py -a groot -d erl-hub/reachy-pick-and-place-images --train_extra '--policy.push_to_hub=false --batch_size 64 --policy.tune_diffusion_model=true --steps=30000 --save_freq=30000 --log_freq=500' -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-groot
+```
+
+
 Dry-run the generated container script (no cluster submit):
 
 ```
