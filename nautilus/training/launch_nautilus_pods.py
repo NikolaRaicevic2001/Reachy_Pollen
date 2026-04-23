@@ -22,6 +22,9 @@ import yaml
 
 LEROBOT_ALGOS = frozenset({"act", "pi05", "groot"})
 LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"           # Kubernetes label for queue grouping (must match queue_watcher.py)
+# RFC 1123 DNS label max length; Pod hostname labels use this segment cap even though
+# metadata.name may allow a longer DNS subdomain (253). We stay <=63 for portability.
+K8S_DNS_LABEL_MAX_LEN = 63
 _TRAINING_DIR = Path(__file__).resolve().parent
 
 
@@ -146,6 +149,15 @@ class NautilusPodConfig:
         ),
     ] = None
 
+    suffix: Annotated[
+        str,
+        tyro.conf.arg(
+            name="suffix",
+            help="Optional suffix appended to Kubernetes pod/job names and lerobot --job_name (empty if omitted).",
+            aliases=["-x"],
+        ),
+    ] = ""
+
 
 @dataclass
 class ContainerSpec:
@@ -172,6 +184,45 @@ def _normalize_algo(raw: str) -> str:
 
 def _dataset_slug(dataset: str) -> str:
     return dataset.replace("/", "-").replace("_", "-").lower()
+
+
+def _resource_suffix_fragment(s: str) -> str:
+    """RFC 1123-ish fragment for DNS labels; empty if s is blank after strip."""
+    t = s.strip().lower()
+    if not t:
+        return ""
+    t = "".join(c if (c.isalnum() or c in "-_") else "-" for c in t)
+    while "--" in t:
+        t = t.replace("--", "-")
+    return t.strip("-")
+
+
+def _slug_segment_fit(slug_n: str, max_slug_chars: int) -> str:
+    """Return slug truncated to max_slug_chars (no leading hyphen)."""
+    if max_slug_chars <= 0 or not slug_n:
+        return ""
+    if len(slug_n) <= max_slug_chars:
+        return slug_n
+    return slug_n[:max_slug_chars].rstrip("-")
+
+
+def make_lerobot_job_name(algo: str, seed: int, suffix: str, max_len: int = K8S_DNS_LABEL_MAX_LEN) -> str:
+    """Wandb/lerobot job id; <= max_len. Order: reachy2_lerobot_{algo}_{suffix}_s{seed}; truncates suffix before seed if needed."""
+    sfx = _resource_suffix_fragment(suffix).replace("-", "_")
+    tail = f"s{seed}"
+    if not sfx:
+        name = f"reachy2_lerobot_{algo}_{tail}"
+        return name[:max_len]
+    name = f"reachy2_lerobot_{algo}_{sfx}_{tail}"
+    if len(name) <= max_len:
+        return name
+    prefix = f"reachy2_lerobot_{algo}_"
+    mid_tail = f"_{tail}"
+    room = max_len - len(prefix) - len(mid_tail)
+    if room <= 0:
+        return f"{prefix}{tail}"[:max_len]
+    sfx_t = sfx[:room].rstrip("_")
+    return f"{prefix}{sfx_t}_{tail}" if sfx_t else f"{prefix}{tail}"[:max_len]
 
 
 def _bash_single_quote(s: str) -> str:
@@ -343,15 +394,99 @@ class NautilusJob(NautilusResource):
         super().__init__(name, containers, is_job=True)
 
 
-def make_resource_name(ts: str, algo: str, slug: str, repeat_idx: int, repeat_total: int, seed: int) -> str:
-    """RFC 1123-ish: max 63 chars for DNS label; keep short."""
+def make_resource_name(
+    ts: str,
+    algo: str,
+    slug: str,
+    repeat_idx: int,
+    repeat_total: int,
+    seed: int,
+    suffix: str = "",
+    max_len: int = K8S_DNS_LABEL_MAX_LEN,
+) -> str:
+    """Pod/Job metadata.name <= max_len (63).
+
+    Order: lerobot, timestamp, algo, user suffix, literal s plus seed, repeat marker, then dataset slug at the end.
+    Truncation preference: dataset slug, then suffix, then timestamp (shorter ts variants); algo and seed stay.
+    """
+    sfx = _resource_suffix_fragment(suffix)
+    slug_n = slug or ""
     algo_p = algo.lower().replace("_", "-")
-    part = f"lerobot-{ts}-{algo_p}-s{seed}"
-    if repeat_total > 1:
-        part = f"{part}-r{repeat_idx + 1}of{repeat_total}"
-    if slug:
-        part = f"{part}-{slug}"[:62].rstrip("-")
-    return part[:63].strip("-")
+    repeat_s = f"-r{repeat_idx + 1}of{repeat_total}" if repeat_total > 1 else ""
+    tail = f"s{seed}{repeat_s}"
+    ts_candidates = [ts, ts.replace("-", ""), ""]
+
+    def stem_no_slug(left: str, sfx_part: str) -> str:
+        if sfx_part:
+            return f"{left}{sfx_part}-{tail}"
+        return f"{left}{tail}"
+
+    def pack_one_ts(ts_use: str) -> Optional[tuple[str, str, str]]:
+        """Return (stem_without_slug_suffix, sfx_use, slug_use) or None if unusable for this ts."""
+        left = f"lerobot-{ts_use}-{algo_p}-" if ts_use else f"lerobot-{algo_p}-"
+        if not sfx:
+            stem = stem_no_slug(left, "")
+            if len(stem) > max_len:
+                return None
+            room_slug = max_len - len(stem) - 1
+            slug_use = _slug_segment_fit(slug_n, room_slug)
+            return stem, "", slug_use
+
+        for sfx_len in range(len(sfx), 0, -1):
+            sfx_part = sfx[:sfx_len].rstrip("-")
+            if not sfx_part:
+                continue
+            stem = stem_no_slug(left, sfx_part)
+            if len(stem) > max_len:
+                continue
+            room_slug = max_len - len(stem) - 1
+            slug_use = _slug_segment_fit(slug_n, room_slug)
+            return stem, sfx_part, slug_use
+        return None
+
+    packed: Optional[tuple[str, str, str]] = None
+    for ts_use in ts_candidates:
+        packed = pack_one_ts(ts_use)
+        if packed is not None:
+            break
+
+    if packed is None:
+        left = f"lr-{algo_p}-"
+        stem_em: str
+        sfx_use: str = ""
+        slug_use: str = ""
+        if sfx:
+            for sfx_len in range(len(sfx), 0, -1):
+                sfx_part = sfx[:sfx_len].rstrip("-")
+                if not sfx_part:
+                    continue
+                stem_try = stem_no_slug(left, sfx_part)
+                if len(stem_try) <= max_len:
+                    stem_em = stem_try
+                    sfx_use = sfx_part
+                    room_slug = max_len - len(stem_em) - 1
+                    slug_use = _slug_segment_fit(slug_n, room_slug)
+                    break
+            else:
+                stem_em = f"{left}{tail}"[:max_len].rstrip("-")
+                room_slug = max_len - len(stem_em) - 1
+                slug_use = _slug_segment_fit(slug_n, room_slug)
+        else:
+            stem_em = stem_no_slug(left, "")
+            stem_em = stem_em[:max_len].rstrip("-")
+            room_slug = max_len - len(stem_em) - 1
+            slug_use = _slug_segment_fit(slug_n, room_slug)
+
+        name = f"{stem_em}-{slug_use}" if slug_use else stem_em
+        if len(name) > max_len:
+            name = name[:max_len].rstrip("-")
+        return name.strip("-")
+
+    stem, _, slug_use = packed
+    name = f"{stem}-{slug_use}" if slug_use else stem
+    if len(name) > max_len:
+        name = name[:max_len].rstrip("-")
+    return name.strip("-")
 
 
 # --- Queue (label LEROBOT_QUEUE_GROUP_LABEL_KEY; must match queue_watcher.py) ---
@@ -541,7 +676,7 @@ def main() -> None:
                 body = build_dummy_script()
                 print(f"=== DUMMY run {i + 1}/{cfg.repeat} seed={seed} ===\n{body}\n")
             else:
-                job_name = f"reachy2_lerobot_{algo}_s{seed}"
+                job_name = make_lerobot_job_name(algo, seed, cfg.suffix)
                 body = build_lerobot_script(
                     cfg.dataset,
                     algo,
@@ -581,12 +716,12 @@ def main() -> None:
 
     for i in range(actual):
         seed = random.randint(1, 10000)
-        name = make_resource_name(ts, algo, slug, i, cfg.repeat, seed)
+        name = make_resource_name(ts, algo, slug, i, cfg.repeat, seed, cfg.suffix)
 
         if algo == "DUMMY":
             shell = build_dummy_script()
         else:
-            job_name = f"reachy2_lerobot_{algo}_s{seed}"
+            job_name = make_lerobot_job_name(algo, seed, cfg.suffix)
             shell = build_lerobot_script(
                 cfg.dataset,
                 algo,
