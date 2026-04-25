@@ -377,3 +377,24 @@ Use this table to track policies you train or deploy. Extend rows as you add met
 
 
 
+source /lerobot/.venv/bin/activate && uv pip install -e ".[pi]"
+
+
+
+lerobot-train \
+    --dataset.repo_id=erl-hub/reachy-pick-and-place-images \
+    --policy.type=pi05 \
+    --output_dir=./outputs/pi05_training \
+    --job_name=pi05_training \
+    --policy.repo_id=erl-hub/reachy-pi05 \
+    --policy.pretrained_path=lerobot/pi05_base \
+    --policy.compile_model=true \
+    --policy.gradient_checkpointing=true \
+    --wandb.enable=true \
+    --policy.dtype=bfloat16 \
+    --policy.freeze_vision_encoder=false \
+    --policy.train_expert_only=false \
+    --steps=3000 \
+    --policy.device=cuda \
+    --batch_size=4
+

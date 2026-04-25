@@ -326,7 +326,7 @@ def build_lerobot_script(
 
 
 def build_dummy_script() -> str:
-    return "sleep 21600"
+    return "sleep 43200"
 
 
 class NautilusResource:
