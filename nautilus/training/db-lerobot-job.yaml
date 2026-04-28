@@ -6,7 +6,6 @@ spec:
   template:
     spec:
       containers:
-
       - name: gpu-container-1
         image: nikolaraicevic2001/erl-lerobot:latest
         command: ["/bin/bash", "-c"]
@@ -43,59 +42,14 @@ spec:
         resources:
           limits:
             nvidia.com/gpu: "1"
-            memory: "32G"
-            cpu: "1.8"
+            memory: "48G"
+            cpu: "4.0"
           requests:
             nvidia.com/gpu: "1"
-            memory: "24G"
-            cpu: "1.5"
-      
-      - name: gpu-container-2
-        image: huggingface/lerobot-gpu@sha256:da85358de50c2ad135d54628e8b92a69a24eb9fe2b518f2d0d82c97a25b3f709
-        command: ["/bin/bash", "-c"]
-        args:
-        - |
-          set -e && \
-          git config --global url."https://${GIT_ACCESS_TOKEN}@github.com/".insteadOf "https://github.com/" && \
-          git fetch origin main && git reset --hard origin/main && \
-          mkdir -p /pers_vol/dwait/logs && \
-          bash -c 'yes | python rainbow_demorl/train.py -a CQL --total-timesteps 1000 --track --exp_name multigpu_cql' --wandb_group nautilus_test > /pers_vol/dwait/logs/$(date +%Y-%m-%d_%H-%M-%S)-lerobot-gpu2.log
-        env:
-        - name: WANDB_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: wandb-secret
-              key: api-key
-        - name: HF_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: hf-token-secret
-              key: hf-access-token
-        - name: GIT_ACCESS_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: github-token-dwait
-              key: GIT_ACCESS_TOKEN
-        volumeMounts:
-        - mountPath: /pers_vol
-          name: db-cephfs-volume
-        - mountPath: /nikola_vol
-          name: nikola-volume
-        - mountPath: /dev/shm
-          name: dshm
-        resources:
-          limits:
-            nvidia.com/gpu: "1"
-            memory: "32G"
-            cpu: "3.0"
-          requests:
-            nvidia.com/gpu: "1"
-            memory: "24G"
-            cpu: "2.8"
-      
+            memory: "45G"
+            cpu: "3.8"
       affinity:
         nodeAffinity:
-          # Hard GPU constraint: schedule only on these GPU products.
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
@@ -110,6 +64,12 @@ spec:
                 - "NVIDIA-L40"
                 - "NVIDIA-A40"
                 - "NVIDIA-A100-PCIE-40GB"
+                - "TESLA-V100-SXM2-32GB"
+                - "NVIDIA-GeForce-RTX-4090"
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - "rci-tide-gpu-03.sdsu.edu"
       restartPolicy: Never
       volumes:
         - name: db-cephfs-volume

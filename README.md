@@ -1,13 +1,8 @@
 # Reachy_Pollen
-
 Reachy_Pollen is a Python-based control and experimentation framework for the Reachy robot, built on top of the official SDK. It provides modular tools for robot manipulation, teleoperation integration, and rapid prototyping of control algorithms, enabling streamlined development of perception, planning, and interaction pipelines.
 
-Documentation: [https://pollen-robotics.github.io/reachy2-sdk/reachy2_sdk/reachy_sdk.html](https://pollen-robotics.github.io/reachy2-sdk/reachy2_sdk/reachy_sdk.html)
-
 # Setup
-
-## Docker
-
+## Docker: Reachy Image
 Image Dowload: [https://hub.docker.com/r/pollenrobotics/reachy2](https://hub.docker.com/r/pollenrobotics/reachy2)
 
 General Docker
@@ -34,38 +29,40 @@ Different Scene Docker
 docker run --rm --platform linux/amd64 -p 8888:8888 -p 6080:6080 -p 50051:50051 --name reachy2 docker.io/pollenrobotics/reachy2 start_rviz:=true start_sdk_server:=true fake:=true orbbec:=false mujoco:=true scene:=fruits
 ```
 
+## Docker
+```
+docker pull nikolaraicevic2001/erl-lerobot:latest
+```
+
 ## Virtual Envrionment
-
-Setup virtual environment
-
 - Linux
-
 ```
 python3.10 -m venv reachy2
 source reachy2/bin/activate
 ```
 
 - Windows
-
 ```
 py -3.10 -m venv reachy2
 .\reachy2\Scripts\Activate
 ```
 
-Install requirments
-
+- Install requirments
 ```
 pip install -r requirements.txt
 ```
 
-## Visualization
-
-Rviz: [http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0](http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0)
+## System Dependencies:
+```
+sudo apt update && sudo apt upgrade -y
+sudo add-apt-repository ppa:ubuntuhandbook1/ffmpeg7
+sudo apt update
+sudo apt install ffmpeg -y
+```
+-Note: not required for Docker image, it's already included.
 
 # Teleoperation
-
 ## Setup
-
 1. Dowload the VR headset app: https://www.meta.com/quest/setup/?srsltid=AfmBOorKOuGUIU7NR95vBQ4dcVi464ir4qGZndC4WYzo4wcg1Jpg4bKb
   - Connect the VR headset to the local machine 
   - Make sure that you can display the computer screen in the VR headset world
@@ -88,45 +85,6 @@ Rviz: [http://localhost:6080/vnc.html?autoconnect=1&resize=remote%e2%81%a0](http
 
 ## Dataset Recording
 ### Recording
-```
-lerobot-record `
---robot.type=reachy2 `
---robot.ip_address=192.168.137.162 `
---robot.id=r2-0008 `
---robot.use_external_commands=true `
---robot.with_mobile_base=true `
---robot.with_l_arm=true `
---robot.with_r_arm=true `
---robot.with_neck=true `
---robot.with_antennas=true `
---robot.with_left_teleop_camera=false `
---robot.with_right_teleop_camera=false `
---robot.with_torso_camera=false `
---robot.camera_width=640 `
---robot.camera_height=480 `
---robot.disable_torque_on_disconnect=false `
---robot.max_relative_target=5.0 `
---teleop.type=reachy2_teleoperator `
---teleop.ip_address=192.168.137.162 `
---teleop.use_present_position=true `
---teleop.with_mobile_base=true `
---teleop.with_l_arm=true `
---teleop.with_r_arm=true `
---teleop.with_neck=true `
---teleop.with_antennas=true `
---dataset.repo_id=pollen_robotics/record_test `
---dataset.single_task="Reachy 2 recording test" `
---dataset.num_episodes=1 `
---dataset.episode_time_s=10 `
---dataset.fps=30 `
---dataset.push_to_hub=false `
---dataset.private=true `
---dataset.streaming_encoding=false `
---dataset.encoder_threads=8 `
---display_data=false
-```
-
-Higher Frequency Setup
 - Windows
 ```
 lerobot-record `
@@ -144,6 +102,8 @@ lerobot-record `
 --robot.with_torso_camera=true `
 --robot.camera_width=640 `
 --robot.camera_height=480 `
+--robot.disable_torque_on_disconnect=false `
+--robot.max_relative_target=5.0 `
 --teleop.type=reachy2_teleoperator `
 --teleop.ip_address=192.168.137.162 `
 --teleop.use_present_position=true `
@@ -159,11 +119,18 @@ lerobot-record `
 --dataset.fps=15 `
 --dataset.vcodec=h264 `
 --dataset.streaming_encoding=false `
+--dataset.private=false `
 --dataset.push_to_hub=true `
 --display_data=false `
 --resume=true
 ```
 
+- Remove dataset if you want to restart a recording:
+```
+Remove-Item -Recurse -Force "$env:USERPROFILE\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place-images"
+```
+
+### Recording: On the Robot with Docker
 ```
 docker run -dit \
   --name lerobot_container \
@@ -174,16 +141,10 @@ docker run -dit \
   sleep infinity    
 ```
 
-- Remove or rename dataset after every recording:
-```
-Remove-Item -Recurse -Force "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place-images"
-```
-
-
 ### Upload the datasets
 ```
 # Navigate to the data
-cd "C:\Users\nikra\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place"
+cd "$env:USERPROFILE\.cache\huggingface\lerobot\erl-hub\reachy-pick-and-place"
 
 # Use the dedicated CLI uploader (often bypasses API timeouts)
 huggingface-cli upload erl-hub/reachy-pick-and-place . . --repo-type=dataset
@@ -232,28 +193,10 @@ lerobot-replay `
 ```
 
 ## Training policies:
-
 ### Training locally
-
-#### Ensure that ffmpeg is installed as follows for training models locally
-```
-sudo apt update && sudo apt upgrade -y
-sudo add-apt-repository ppa:ubuntuhandbook1/ffmpeg7
-sudo apt update
-sudo apt install ffmpeg -y
-```
-
 #### Convert dataset to required format
 ```
 python -m lerobot.datasets.v30.convert_dataset_v21_to_v30 --repo-id=pollen-robotics/pick_and_place_bottle && \
-```
-
-#### Start training
-```
-lerobot-train --dataset.repo_id=pollen-robotics/pick_and_place_bottle --policy.type=act --job_name=reachy2_lerobot_act --wandb.enable=false --policy.device=cuda --policy.push_to_hub=false"
-```
-```
-lerobot-train --dataset.repo_id=erl-hub/reachy-pick-and-place-images --policy.type=groot --job_name=groot --wandb.enable=true --policy.device=cuda --policy.push_to_hub=false --batch_size=4 --steps=20000 --save_freq=2000 --log_freq=50 --policy.tune_diffusion_model=false --dataset.root /home/user_lerobot/erl_hub/
 ```
 
 #### Dowloading Datasets Locally (Optional)
@@ -263,20 +206,13 @@ hf download ganatrask/NOVA --repo-type dataset --local-dir /home/user_lerobot/NO
 ```
 
 ### Training on Nautilus cluster
-LeRobot-on-Nautilus code lives under `(nautilus/training/)`: the launcher `(nautilus/training/launch_nautilus_pods.py)`, Kubernetes Pod/Job templates (`db-lerobot-*.yaml`), and `(nautilus/training/queue_watcher.py)` for job queuing.
-
-Each training container: creates a Conda env, installs FFmpeg and the right `lerobot[...]` extras, converts the dataset from v2.1 to v3.0 when needed, then runs `lerobot-train` on CUDA with Weights & Biases enabled and `policy.push_to_hub=false` (override or extend with `--train_extra`).
+LeRobot-on-Nautilus code lives under `(nautilus/training/)`. Each training container: creates a Conda env, installs FFmpeg and the right `lerobot[...]` extras, converts the dataset from v2.1 to v3.0 when needed, then runs `lerobot-train` on CUDA with Weights & Biases enabled and `policy.push_to_hub=false` (override or extend with `--train_extra`).
 
 **Weights & Biases:** The Pod and Job templates inject `WANDB_API_KEY` from a Kubernetes secret named `wandb-secret` (key `api-key`). Create it once in your namespace so runs can log to your W&B workspace—for example:
-
 ```
 kubectl create secret generic wandb-secret-nikola --from-literal=api-key=<YOUR_WANDB_API_KEY>
 ```
-
 Without that secret, runs will not show up under your W&B account, or training may fail if not key is found.
-
-**Supported policy:** use `act` or `groot` for real training runs. The launcher also accepts `pi05`, but this is **not fully functional yet and is not supported** in this workflow.
-
 
 | Option                  | Short | Description                                                                                                                                                                      |
 | ----------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -296,37 +232,101 @@ Without that secret, runs will not show up under your W&B account, or training m
 
 **Queuing:** If you use `--jobs` and set `--namespace_pod_limit` to a positive value, the launcher labels jobs with a queue group, starts as many as fit, and keeps unsuspending the rest as pods finish. If you interrupt that process (e.g. Ctrl+C), re-attach with `(nautilus/training/queue_watcher.py)` using the printed `--label` and the same `-nl` (and concurrency) you used at launch.
 
-#### Examples
-
-Train an image-based ACT policy on `pollen-robotics/pick_and_place_bottle`:
+#### Start training: Ordered According to Size of the Model
+- ACT
 ```
-python nautilus/training/launch_nautilus_pods.py -a act -d pollen-robotics/pick_and_place_bottle
-```
-
-Train an image-based ACT policy on datasets and saving it to HuggingFace:
-```
-python nautilus/training/launch_nautilus_pods.py -a act -d erl-hub/reachy-pick-and-place-images -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-act --train_extra "--steps=100000 --eval_freq=20000 --wandb.enable=false"
+lerobot-train --dataset.repo_id=pollen-robotics/pick_and_place_bottle --policy.type=act --job_name=reachy2_lerobot_act --wandb.enable=false --policy.device=cuda --policy.push_to_hub=false"
 ```
 
-Finetune GR00T on custom dataset and upload the model to HuggingFace:
+-SmolVla
 ```
-python launch_nautilus_pods.py -a groot -d erl-hub/reachy-pick-and-place-images --train_extra '--policy.push_to_hub=false --batch_size 64 --policy.tune_diffusion_model=true --steps=30000 --save_freq=30000 --log_freq=500' -j --save_models --upload_to_hub --hf_model_repo erl-hub/reachy-groot
+python nautilus/training/launch_nautilus_pods.py \
+  -a smolvla \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=64 --steps=20000 --save_freq=20000 --log_freq=500 --rename_map='{"observation.images.torso_rgb":"observation.images.camera1"}' --policy.empty_cameras=2" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-smolvla \
+  --upload_to_hub \
+  -x basic-run 
 ```
 
+- GR00T
+```
+python nautilus/training/launch_nautilus_pods.py \
+  -a groot \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=64 --steps=30000 --save_freq=30000 --log_freq=500 --policy.base_model_path=nvidia/GR00T-N1.5-3B --policy.pretrained_path=/nikola_vol/saved_models/reachy/2026-04-23_21-18-51-groot-step-01-erl-hub-reachy-pick-and-place-images_s485/checkpoints/000001/pretrained_model --policy.tune_diffusion_model=true --peft.method_type=LORA --peft.r=64 --peft.target_modules='[to_q,to_k,to_v,to_out.0,proj_out_1,proj_out_2]'" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-groot \
+  --upload_to_hub \
+  -x lora-ckpt
+```
 
-Dry-run the generated container script (no cluster submit):
+```
+python nautilus/training/launch_nautilus_pods.py \
+  -a groot \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=64 --steps=30000 --save_freq=30000 --log_freq=500 --policy.tune_diffusion_model=true --policy.lora_rank=64" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-groot \
+  --upload_to_hub \
+  -x lora-native
+```
 
+```
+python nautilus/training/launch_nautilus_pods.py \
+  -a groot \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=64 --steps=30000 --save_freq=30000 --log_freq=500 --policy.tune_diffusion_model=false" \
+  --save_models \python nautilus/training/launch_nautilus_pods.py \
+  -a groot \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=64 --steps=30000 --save_freq=30000 --log_freq=500 --policy.tune_diffusion_model=false" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-groot \
+  --upload_to_hub \
+  -x no-diff-ft
+  --hf_model_repo erl-hub/reachy-groot \
+  --upload_to_hub \
+  -x no-diff-ft
+```
+
+- pi05
+```
+python nautilus/training/launch_nautilus_pods.py \
+  -a pi05 \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=32 --steps=3000 --save_freq=3000 --log_freq=500 --policy.pretrained_path=lerobot/pi05_base --policy.compile_model=true --policy.gradient_checkpointing=true --policy.freeze_vision_encoder=true --policy.train_expert_only=false --policy.dtype=bfloat16" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-pi05 \
+  --upload_to_hub \
+  -x basic-run 
+```
+- Dry-run the generated container script (no cluster submit):
 ```
 python nautilus/training/launch_nautilus_pods.py --dry_run -a act -d pollen-robotics/pick_and_place_bottle
 ```
-
-Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend as capacity frees):
-
+- Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend as capacity frees):
 ```
 python nautilus/training/launch_nautilus_pods.py -j -nl 200 -nr 3 -a act -d pollen-robotics/pick_and_place_bottle
 ```
 
-### Deploying policies on reachy2
+### Policy registry
+
+Use this table to track policies you train or deploy. Extend rows as you add methods; replace placeholders with your checkpoints, parameter counts, and run notes.
+
+| Policy | Method | Size | Hardware | 
+| ------ | ------ | ---- | -------- | 
+| `act` | Action Chunking Transformer (`--policy.type=act`) | 250MB | CPU; Intel Core 9 (RTX GeForce 2080+)||
+
+
+#### Deploying policies on reachy2
 Pass the repo for trained policy best checkpoint as `policy.path`. Videos and trajectories from rollouts will be saved at `dataset.repo_id`
 
 ```
@@ -358,43 +358,8 @@ lerobot-record \
   --resume=true
 ```
 
-### Policy registry
-
-Use this table to track policies you train or deploy. Extend rows as you add methods; replace placeholders with your checkpoints, parameter counts, and run notes.
-
-| Policy | Method | Size | Hardware | 
-| ------ | ------ | ---- | -------- | 
-| `act` | Action Chunking Transformer (`--policy.type=act`) | 250MB | CPU; Intel Core 9 (RTX GeForce 2080+)||
 
 
 
 
-
-
-
-
-
-
-
-
-source /lerobot/.venv/bin/activate && uv pip install -e ".[pi]"
-
-
-
-lerobot-train \
-    --dataset.repo_id=erl-hub/reachy-pick-and-place-images \
-    --policy.type=pi05 \
-    --output_dir=./outputs/pi05_training \
-    --job_name=pi05_training \
-    --policy.repo_id=erl-hub/reachy-pi05 \
-    --policy.pretrained_path=lerobot/pi05_base \
-    --policy.compile_model=true \
-    --policy.gradient_checkpointing=true \
-    --wandb.enable=true \
-    --policy.dtype=bfloat16 \
-    --policy.freeze_vision_encoder=false \
-    --policy.train_expert_only=false \
-    --steps=3000 \
-    --policy.device=cuda \
-    --batch_size=4
 

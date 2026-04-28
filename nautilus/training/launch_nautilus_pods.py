@@ -20,7 +20,7 @@ from typing import Annotated, Any, Dict, List, Optional
 import tyro
 import yaml
 
-LEROBOT_ALGOS = frozenset({"act", "pi05", "groot"})
+LEROBOT_ALGOS = frozenset({"act", "pi05", "groot", "smolvla"})
 LEROBOT_QUEUE_GROUP_LABEL_KEY = "lerobot_queue_group"           # Kubernetes label for queue grouping (must match queue_watcher.py)
 # RFC 1123 DNS label max length; Pod hostname labels use this segment cap even though
 # metadata.name may allow a longer DNS subdomain (253). We stay <=63 for portability.
@@ -43,7 +43,7 @@ class NautilusPodConfig:
         str,
         tyro.conf.arg(
             name="algo",
-            help="Policy: act, pi05, groot, or DUMMY (sleep pod for cluster tests).",
+            help="Policy: act, pi05, groot, smolvla, or DUMMY (sleep pod for cluster tests).",
             aliases=["-a"],
         ),
     ] = "act"
@@ -179,7 +179,7 @@ def _normalize_algo(raw: str) -> str:
     lower = raw.strip().lower()
     if lower in LEROBOT_ALGOS:
         return lower
-    raise ValueError(f"Unknown --algo {raw!r}; expected one of act, pi05, groot, DUMMY")
+    raise ValueError(f"Unknown --algo {raw!r}; expected one of act, pi05, groot, smolvla, DUMMY")
 
 
 def _dataset_slug(dataset: str) -> str:
@@ -250,7 +250,9 @@ def build_lerobot_script(
     elif policy_type == "groot":
         pip_install = ":"
     elif policy_type == "pi05":
-        pip_install = "uv pip install 'lerobot[reachy2,pi]'"
+        pip_install = ":"
+    elif policy_type == "smolvla":
+        pip_install = ":"
     else:
         raise ValueError(policy_type)
     # lerobot>=~0.5: convert lives under lerobot.scripts; 0.4.x uses lerobot.datasets.v30

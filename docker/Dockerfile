@@ -11,7 +11,7 @@ ARG FLASH_ATTN_WHL="https://github.com/lesj0610/flash-attention/releases/downloa
 # Install python packages
 RUN source /lerobot/.venv/bin/activate && \
     uv pip install --no-deps "${FLASH_ATTN_WHL}" && \
-    uv pip install --no-build-isolation "lerobot[groot,reachy2]"
+    uv pip install --no-build-isolation "lerobot[pi, smolvla, groot,reachy2]"
 
 WORKDIR /lerobot
 
