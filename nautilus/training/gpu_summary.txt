@@ -6,10 +6,11 @@ Getting quick GPU summary...
 GPU DISCOVERY TABLE (Grouped by VRAM - Ascending)
 ========================================================================================================================
 
-Unknown VRAM (1 nodes, 1 GPUs, 1 models):
+Unknown VRAM (2 nodes, 13 GPUs, 1 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
+Unknown      Unknown GPU                         admiralty-ncmir-mm-expanse-7d43bc97a0             12        
 Unknown      Unknown GPU                         k8s-dtn-01.uog.edu                                 1         
 
 8GB VRAM (4 nodes, 17 GPUs, 3 models):
@@ -21,7 +22,7 @@ GPU VRAM     GPU Model                           Node Name                      
 8GB          Quadro-M4000                        evldtn.evl.uic.edu                                 1         
 8GB          NVIDIA-GeForce-GTX-1080             k8s-gpu-01.calit2.optiputer.net                    8         
 
-11GB VRAM (39 nodes, 275 GPUs, 2 models):
+11GB VRAM (40 nodes, 279 GPUs, 2 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
@@ -63,6 +64,7 @@ GPU VRAM     GPU Model                           Node Name                      
 11GB         NVIDIA-GeForce-RTX-2080-Ti          k8s-haosu-22.sdsc.optiputer.net                    7         
 11GB         NVIDIA-GeForce-RTX-2080-Ti          k8s-haosu-23.sdsc.optiputer.net                    7         
 11GB         NVIDIA-GeForce-RTX-2080-Ti          nrp-g1.nysernet.org                                7         
+11GB         NVIDIA-GeForce-GTX-1080-Ti          prp-gpu-2.t2.ucsd.edu                              4         
 11GB         NVIDIA-GeForce-GTX-1080-Ti          ucm-fiona01.ucmerced.edu                           6         
 
 12GB VRAM (3 nodes, 17 GPUs, 1 models):
@@ -73,10 +75,15 @@ GPU VRAM     GPU Model                           Node Name                      
 12GB         NVIDIA-TITAN-Xp                     k8s-ravi-01.calit2.optiputer.net                   8         
 12GB         NVIDIA-TITAN-Xp                     patternlab.calit2.optiputer.net                    4         
 
-16GB VRAM (8 nodes, 41 GPUs, 3 models):
+16GB VRAM (13 nodes, 75 GPUs, 5 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
+16GB         Tesla-V100-SXM2-16GB                chi-dgx-node01.csuchico.edu                        8         
+16GB         Tesla-V100-SXM2-16GB                chi-dgx-node02.csuchico.edu                        8         
+16GB         Tesla-V100-SXM2-16GB                chi-dgx-node03.csuchico.edu                        8         
+16GB         Tesla-V100-SXM2-16GB                chi-dgx-node04.csuchico.edu                        8         
+16GB         NVIDIA-A2                           csn-nrp-node1.csun.edu                             2         
 16GB         Tesla-V100-PCIE-16GB                gpn-fiona-mizzou-7.rnet.missouri.edu               2         
 16GB         Tesla-V100-PCIE-16GB                gpn-fiona-mizzou-8.rnet.missouri.edu               2         
 16GB         Tesla-V100-PCIE-16GB                gpn-fiona-mizzou-9.rnet.missouri.edu               2         
@@ -86,7 +93,13 @@ GPU VRAM     GPU Model                           Node Name                      
 16GB         NVIDIA-RTX-A4000                    ry-gpu-15.sdsc.optiputer.net                       16        
 16GB         NVIDIA-RTX-A4000                    ry-gpu-16.sdsc.optiputer.net                       16        
 
-24GB VRAM (107 nodes, 679 GPUs, 7 models):
+20GB VRAM (1 nodes, 2 GPUs, 1 models):
+------------------------------------------------------------------------------------------------------------------------
+GPU VRAM     GPU Model                           Node Name                                          GPU Count 
+------------------------------------------------------------------------------------------------------------------------
+20GB         NVIDIA-RTX-4000-Ada-Generation      stratus1.nrp-espm.berkeley.edu                     2         
+
+24GB VRAM (109 nodes, 690 GPUs, 7 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
@@ -139,6 +152,7 @@ GPU VRAM     GPU Model                           Node Name                      
 24GB         NVIDIA-GeForce-RTX-4090             hcc-nrp-shor-c6034.unl.edu                         4         
 24GB         NVIDIA-GeForce-RTX-3090             k8s-3090-01.calit2.optiputer.net                   8         
 24GB         NVIDIA-GeForce-RTX-3090             k8s-3090-01.clemson.edu                            8         
+24GB         NVIDIA-GeForce-RTX-3090             k8s-3090-01.usd.edu                                7         
 24GB         NVIDIA-GeForce-RTX-3090             k8s-3090-02.clemson.edu                            8         
 24GB         NVIDIA-GeForce-RTX-4090             k8s-4090-01.calit2.optiputer.net                   8         
 24GB         NVIDIA-GeForce-RTX-4090             k8s-4090-02.calit2.optiputer.net                   2         
@@ -158,6 +172,7 @@ GPU VRAM     GPU Model                           Node Name                      
 24GB         NVIDIA-GeForce-RTX-3090             nautilus01.hsrn.nyu.edu                            3         
 24GB         NVIDIA-RTX-A5000                    nautilusg01.sci.cwru.edu                           1         
 24GB         NVIDIA-RTX-A5000                    nautilusg02.sci.cwru.edu                           1         
+24GB         NVIDIA-GeForce-RTX-3090             nrp-01.laccd.edu                                   4         
 24GB         NVIDIA-GeForce-RTX-3090             nrp-fiona-001.sdmz.amnh.org                        5         
 24GB         NVIDIA-GeForce-RTX-3090             prp01.ifa.hawaii.edu                               2         
 24GB         NVIDIA-TITAN-RTX                    rincewind.crbs.ucsd.edu                            2         
@@ -198,7 +213,7 @@ GPU VRAM     GPU Model                           Node Name                      
 24GB         NVIDIA-GeForce-RTX-3090             uicnrp-fiona2.evl.uic.edu                          5         
 24GB         NVIDIA-TITAN-RTX                    unseenu.crbs.ucsd.edu                              2         
 
-32GB VRAM (8 nodes, 60 GPUs, 1 models):
+32GB VRAM (9 nodes, 68 GPUs, 2 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
@@ -209,6 +224,7 @@ GPU VRAM     GPU Model                           Node Name                      
 32GB         Tesla-V100-SXM2-32GB                cph-dgx-node7.humboldt.edu                         8         
 32GB         Tesla-V100-SXM2-32GB                cph-dgx-node8.humboldt.edu                         8         
 32GB         Tesla-V100-SXM2-32GB                cph-dgx-node9.humboldt.edu                         8         
+32GB         NVIDIA-RTX-5000-Ada-Generation      k8s-gpu-6.ucsc.edu                                 8         
 32GB         Tesla-V100-SXM2-32GB                v100-cc-star-01.noc.ucsb.edu                       4         
 
 40GB VRAM (5 nodes, 6 GPUs, 1 models):
@@ -221,12 +237,15 @@ GPU VRAM     GPU Model                           Node Name                      
 40GB         NVIDIA-A100-PCIE-40GB               sdsmt.gp-argo.greatplains.net                      1         
 40GB         NVIDIA-A100-PCIE-40GB               sdsu.gp-argo.greatplains.net                       1         
 
-48GB VRAM (32 nodes, 145 GPUs, 4 models):
+48GB VRAM (35 nodes, 157 GPUs, 5 models):
 ------------------------------------------------------------------------------------------------------------------------
 GPU VRAM     GPU Model                           Node Name                                          GPU Count 
 ------------------------------------------------------------------------------------------------------------------------
+48GB         NVIDIA-L40S                         bak-hpc2.csub.edu                                  4         
 48GB         NVIDIA-RTX-A6000                    discover-nrp-01.sdccd.edu                          8         
 48GB         NVIDIA-RTX-A6000                    gpu00.nrp.hpc.udel.edu                             4         
+48GB         NVIDIA-L40S                         hcc-nrp-pki-c1703.unl.edu                          4         
+48GB         NVIDIA-L40S                         hcc-nrp-pki-c1705.unl.edu                          4         
 48GB         NVIDIA-RTX-A6000                    hcc-prp-c5036.unl.edu                              8         
 48GB         NVIDIA-RTX-A6000                    hcc-prp-c5038.unl.edu                              5         
 48GB         NVIDIA-A40                          k8s-a40-01.calit2.optiputer.net                    8         
@@ -302,20 +321,21 @@ GPU VRAM     GPU Model                           Node Name                      
 ========================================================================================================================
 SUMMARY STATISTICS:
 ========================================================================================================================
-Total GPUs: 1414
-Unique GPU models: 27
-Unique nodes: 238
+Total GPUs: 1497
+Unique GPU models: 32
+Unique nodes: 252
 VRAM range: 8GB - 480GB
 
 VRAM Distribution:
-  Unknown: 1 GPUs
+  Unknown: 13 GPUs
   8GB: 17 GPUs
-  11GB: 275 GPUs
+  11GB: 279 GPUs
   12GB: 17 GPUs
-  16GB: 41 GPUs
-  24GB: 679 GPUs
-  32GB: 60 GPUs
+  16GB: 75 GPUs
+  20GB: 2 GPUs
+  24GB: 690 GPUs
+  32GB: 68 GPUs
   40GB: 6 GPUs
-  48GB: 145 GPUs
+  48GB: 157 GPUs
   80GB: 172 GPUs
   480GB: 1 GPUs

@@ -308,10 +308,23 @@ python nautilus/training/launch_nautilus_pods.py \
   --upload_to_hub \
   -x basic-run 
 ```
+```
+python nautilus/training/launch_nautilus_pods.py \
+  -a pi05 \
+  -d erl-hub/reachy-pick-and-place-images \
+  -j \
+  --train_extra "--batch_size=32 --steps=3000 --save_freq=3000 --log_freq=500 --policy.pretrained_path=lerobot/pi05_base --policy.use_peft=true --peft.method_type=lora --peft.r=32 --peft.target_modules='[q_proj,v_proj,k_proj,o_proj]' --policy.gradient_checkpointing=true --policy.dtype=bfloat16" \
+  --save_models \
+  --hf_model_repo erl-hub/reachy-pi05 \
+  --upload_to_hub \
+  -x pi05-lora-ft
+```
+
 - Dry-run the generated container script (no cluster submit):
 ```
 python nautilus/training/launch_nautilus_pods.py --dry_run -a act -d pollen-robotics/pick_and_place_bottle
 ```
+
 - Submit three seeded Jobs with a namespace cap of 200 pods (queued jobs unsuspend as capacity frees):
 ```
 python nautilus/training/launch_nautilus_pods.py -j -nl 200 -nr 3 -a act -d pollen-robotics/pick_and_place_bottle
