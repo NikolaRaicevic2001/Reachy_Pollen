@@ -61,6 +61,7 @@ spec:
                 - "NVIDIA-A100-SXM4-80GB"
                 - "NVIDIA-A100-80GB-PCIe-MIG-1g.10gb"
                 - "NVIDIA-RTX-A6000"
+                - "Quadro-RTX-8000"
                 - "NVIDIA-L40S"
                 - "NVIDIA-L40"
                 - "NVIDIA-A40"
