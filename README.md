@@ -75,10 +75,11 @@ sudo apt install ffmpeg -y
     - the view of the robot displayed in miniature
     - a good network connection indication
 3. If the "Connection Failed" once entering the transition room with "motor","audio", and other configurations not being connected then:
-  - Need to install gstreamer correctly: [https://gstreamer.freedesktop.org/data/pkg/windows/1.27.90/msvc/?__goaway_challenge=meta-refresh&__goaway_id=9cf305064589a1220ab9c6f4cbaec4b1&__goaway_referer=https%3A%2F%2Fforum.pollen-robotics.com%2F](https://gstreamer.freedesktop.org/data/pkg/windows/1.27.90/msvc/?__goaway_challenge=meta-refresh&__goaway_id=9cf305064589a1220ab9c6f4cbaec4b1&__goaway_referer=https%3A%2F%2Fforum.pollen-robotics.com%2F)
-    - gstreamer-1.0-msvc-x86_64-1.27.90.msi            2026-01-08 01:17     89M    
-    - gstreamer-1.0-devel-msvc-x86_64-1.27.90.msi    2026-01-08 01:13     317M
-  - After that we need to setup windows path environmental variables: 
+  - Need to install gstreamer correctly: [https://gstreamer.freedesktop.org/data/pkg/windows/]
+  - Choose version 1.26.11
+    - gstreamer-1.0-msvc-x86_64-1.26.11.msi              
+    - gstreamer-1.0-devel-msvc-x86_64-1.26.11.msi    
+  - After that we need to setup windows path environmental variables:
   - Restart PowerShell and verify if the gstreamer is correctly setup: 
 4. If experiencing issues with VR headset not properly moving the arms and not reflecting that in the teleoperation app then:
   - Set the VR flag environmental variable: 
