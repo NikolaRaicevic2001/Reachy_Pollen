@@ -311,14 +311,14 @@ python nautilus/training/launch_nautilus_pods.py \
 
 - pi05
 ```
-python nautilus/training/launch_nautilus_pods.py \
-  -a pi05 \
-  -d erl-hub/reachy-pick-and-place-images \
-  -j \
-  --train_extra "--batch_size=32 --steps=3000 --save_freq=3000 --log_freq=500 --policy.pretrained_path=lerobot/pi05_base --policy.compile_model=true --policy.gradient_checkpointing=true --policy.freeze_vision_encoder=true --policy.train_expert_only=false --policy.dtype=bfloat16" \
-  --save_models \
-  --hf_model_repo erl-hub/reachy-pi05 \
-  --upload_to_hub \
+python nautilus/training/launch_nautilus_pods.py `
+  -a pi05 `
+  -d erl-hub/reachy-pick-and-place-images `
+  -j `
+  --train_extra "--batch_size=32 --steps=3000 --save_freq=3000 --log_freq=500 --policy.pretrained_path=lerobot/pi05_base --policy.compile_model=true --policy.gradient_checkpointing=true --policy.freeze_vision_encoder=true --policy.train_expert_only=false --policy.dtype=bfloat16" `
+  --save_models `
+  --hf_model_repo erl-hub/reachy-pi05 `
+  --upload_to_hub `
   -x basic-run 
 ```
 ```
@@ -354,6 +354,8 @@ Use this table to track policies you train or deploy. Extend rows as you add met
 | `GR00T` | VLA (`--policy.type=groot`) | (71.1MB)5.5GB | 2026-04-25_12-31-24-groot-lora-ckpt-erl-hub-reachy-pick-and-place-images_s2889 | NVIDIA-L40 CPU 3.8-4.0 | 2 |
 | `GR00T` | VLA (`--policy.type=groot`) | (71.1MB)5.5GB | 2026-04-24_00-04-05-groot-lora-ckpt-erl-hub-reachy-pick-and-place-images_s9847 | NVIDIA-L40 CPU 1.8-2.0 | - |
 | `GR00T` | VLA (`--policy.type=groot`) | 5.5GB | 2026-04-24_23-28-29-groot-no-diff-ft-erl-hub-reachy-pick-and-place-images_s6518 | NVIDIA-L40 CPU 3.8-4.0 30-32RAM | 2 |
+| `GR00T` | VLA (`--policy.type=groot`) | 5.5GB | 2026-04-25_01-13-06-groot-diff-ft-erl-hub-reachy-pick-and-place-images_s9486 | NVIDIA-L40 CPU 3.8-4.0 30-32RAM | - |
+| `GR00T` | VLA (`--policy.type=groot`) | 5.5GB | 2026-04-28_20-57-07-groot-lora-native-erl-hub-reachy-pick-and-place-images_s96 | NVIDIA-L40 CPU 3.8-4.0 30-32RAM | - |
 | `pi05` | VLA (`--policy.type=pi05`) | (73.5MB)14.5GB | 2026-04-28_21-22-09-pi05-lora-ft-erl-hub-reachy-pick-and-place-images_s9920 | NVIDIA-L40 CPU 5.8-6.0 70-72RAM  | - |
 | `pi05` | VLA (`--policy.type=pi05`) | (73.5MB)14.5GB | 2026-04-28_22-41-14-pi05-lora-ft-erl-hub-reachy-pick-and-place-images_s3055 | NVIDIA-L40S CPU 5.8-6.0 70-72RAM | - |
 | `pi05` | VLA (`--policy.type=pi05`) | (73.5MB)14.5GB | 2026-04-28_22-47-15-pi05-lora-ft-erl-hub-reachy-pick-and-place-images_s536  | NVIDIA-L40S CPU 5.8-6.0 70-72RAM | - |
@@ -364,31 +366,31 @@ Use this table to track policies you train or deploy. Extend rows as you add met
 Pass the repo for trained policy best checkpoint as `policy.path`. Videos and trajectories from rollouts will be saved at `dataset.repo_id`
 
 ```
-lerobot-record \
-  --robot.type=reachy2 \
-  --robot.ip_address="192.168.10.172" \
-  --robot.id="r2-0008" \
-  --robot.use_external_commands=false \
-  --robot.with_mobile_base=false \
-  --robot.with_l_arm=true \
-  --robot.with_r_arm=true \
-  --robot.with_neck=true \
-  --robot.with_antennas=false \
-  --robot.with_left_teleop_camera=false \
-  --robot.with_right_teleop_camera=false \
-  --robot.with_torso_camera=true \
-  --robot.camera_width=640 \
-  --robot.camera_height=480 \
-  --policy.path=erl-hub/reachy-groot-lora-ckpt-execute-pick-and-place \
-  --dataset.repo_id="erl-hub/eval_reachy-pick-and-place" \
-  --dataset.root="outputs/reachy_local_test" \
-  --dataset.single_task="Pick up the tomato soup can and place it into the metal bowl" \
-  --dataset.num_episodes=1 \
-  --dataset.episode_time_s=60 \
-  --dataset.fps=15 \
-  --dataset.vcodec=h264 \
-  --dataset.push_to_hub=false \
-  --play_sounds=false \
+lerobot-record `
+  --robot.type=reachy2 `
+  --robot.ip_address="192.168.10.172" `
+  --robot.id="r2-0008" `
+  --robot.use_external_commands=false `
+  --robot.with_mobile_base=false `
+  --robot.with_l_arm=true `
+  --robot.with_r_arm=true `
+  --robot.with_neck=true `
+  --robot.with_antennas=false `
+  --robot.with_left_teleop_camera=false `
+  --robot.with_right_teleop_camera=false `
+  --robot.with_torso_camera=true `
+  --robot.camera_width=640 `
+  --robot.camera_height=480 `
+  --policy.path=erl-hub/reachy-groot-lora-ckpt-execute-pick-and-place `
+  --dataset.repo_id="erl-hub/eval_reachy-pick-and-place" `
+  --dataset.root="outputs/reachy_local_test" `
+  --dataset.single_task="Pick up the tomato soup can and place it into the metal bowl" `
+  --dataset.num_episodes=1 `
+  --dataset.episode_time_s=60 `
+  --dataset.fps=15 `
+  --dataset.vcodec=h264 `
+  --dataset.push_to_hub=false `
+  --play_sounds=false `
   --resume=true
 ```
 
